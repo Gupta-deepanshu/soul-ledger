@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import { formatSigned } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { MatchupCell, MatchupGrid as MatchupGridData } from "@/lib/deadlock/meta";
 import { bestText } from "@/lib/contrast";
 
@@ -29,17 +30,21 @@ function cellStyle(v: number): React.CSSProperties {
   };
 }
 
-function describe({ heroes, cells }: MatchupGridData): string {
+function describe({ heroes, cols = heroes, cells }: MatchupGridData): string {
+  // Same heroes both ways: every edge appears as a positive cell, so take the largest.
+  // Two lineups: the biggest edge may favour the column hero, so compare sizes.
+  const size = (v: number) => (cols === heroes ? v : Math.abs(v));
   let best: { row: number; col: number; v: number } | null = null;
   for (let r = 0; r < cells.length; r++) {
     for (let c = 0; c < cells[r].length; c++) {
       const v = cells[r][c];
-      if (typeof v === "number" && (!best || v > best.v)) best = { row: r, col: c, v };
+      if (typeof v === "number" && (!best || size(v) > size(best.v))) best = { row: r, col: c, v };
     }
   }
   if (!best) return "Not enough matches between these heroes to compare.";
   const { row, col, v } = best;
-  return `Biggest edge: ${heroes[row].name} wins ${formatSigned(v)} points above 50% against ${heroes[col].name}.`;
+  const [winner, loser] = v >= 0 ? [heroes[row], cols[col]] : [cols[col], heroes[row]];
+  return `Biggest edge: ${winner.name} wins ${formatSigned(Math.abs(v))} points above 50% against ${loser.name}.`;
 }
 
 function Cell({ value, delay, inView }: { value: MatchupCell; delay: number; inView: boolean }) {
@@ -62,10 +67,20 @@ function Cell({ value, delay, inView }: { value: MatchupCell; delay: number; inV
 }
 
 /** Row hero's win rate vs column hero, minus 50%. Cells fade in on a diagonal sweep. */
-export function MatchupGrid({ grid }: { grid: MatchupGridData }) {
+export function MatchupGrid({
+  grid,
+  rowLabelClassName,
+  colLabelClassName = "text-muted-foreground",
+}: {
+  grid: MatchupGridData;
+  /** e.g. a team text colour when rows and columns are two lineups. */
+  rowLabelClassName?: string;
+  colLabelClassName?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
-  const columns = `repeat(${grid.heroes.length}, minmax(0, 1fr))`;
+  const cols = grid.cols ?? grid.heroes;
+  const columns = `repeat(${cols.length}, minmax(0, 1fr))`;
   return (
     <div className="overflow-x-auto">
       <div
@@ -76,17 +91,17 @@ export function MatchupGrid({ grid }: { grid: MatchupGridData }) {
         style={{ gridTemplateColumns: `var(--label-col) ${columns}` }}
       >
         <span />
-        {grid.heroes.map((h) => (
-          <span key={h.heroId} className="truncate pb-1 text-center font-mono text-[10px] text-muted-foreground md:pb-1.5 md:text-[11px]">
+        {cols.map((h) => (
+          <span key={h.heroId} className={cn("truncate pb-1 text-center font-mono text-[10px] md:pb-1.5 md:text-[11px]", colLabelClassName)}>
             {h.shortName}
           </span>
         ))}
         {grid.heroes.map((rowHero, r) => [
-          <span key={`label-${rowHero.heroId}`} className="flex items-center truncate pr-1 text-[11px] md:text-[13px]">
+          <span key={`label-${rowHero.heroId}`} className={cn("flex items-center truncate pr-1 text-[11px] md:text-[13px]", rowLabelClassName)}>
             {rowHero.name}
           </span>,
           ...grid.cells[r].map((value, c) => (
-            <Cell key={`${rowHero.heroId}-${grid.heroes[c].heroId}`} value={value} delay={(r + c) * 0.03} inView={inView} />
+            <Cell key={`${rowHero.heroId}-${cols[c].heroId}`} value={value} delay={(r + c) * 0.03} inView={inView} />
           )),
         ])}
       </div>

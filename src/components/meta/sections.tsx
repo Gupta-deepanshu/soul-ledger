@@ -5,7 +5,7 @@
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SectionError } from "@/components/ui/SectionError";
-import { StatCell, StatGrid, type Stat } from "@/components/ui/StatGrid";
+import { StatCell, StatGrid, StatRow, type Stat } from "@/components/ui/StatGrid";
 import { RankDistribution } from "@/components/charts/RankDistribution";
 import { MatchupGrid } from "@/components/charts/MatchupGrid";
 import {
@@ -95,13 +95,13 @@ export function CardSkeleton({ numeral, title, rows = 6, className }: { numeral:
 
 export function PatchTotalsSkeleton() {
   return (
-    <section aria-busy="true" aria-label="Patch totals" className="grid grid-cols-2 gap-px border border-line bg-line xl:grid-cols-4 xl:gap-0 xl:border-0 xl:border-b xl:bg-transparent">
+    <StatRow label="Patch totals" columns={4} busy>
       {["Matches this patch", "Average match", `${TEAMS[0].shortName} wins`, "Souls per minute"].map((label) => (
         <StatCell key={label} label={label} note={<span className="opacity-0">–</span>}>
           <span className="text-faint">—</span>
         </StatCell>
       ))}
-    </section>
+    </StatRow>
   );
 }
 

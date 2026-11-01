@@ -2,7 +2,9 @@
 // Requests run one after another (the API sheds load on parallel uncached queries).
 // Usage: node scripts/save-fixtures.mjs [matchId]
 //        node scripts/save-fixtures.mjs --live   (only active matches + their players' ranks)
-//        node scripts/save-fixtures.mjs --steam  (only Steam names for players in match-*.json)
+//        node scripts/save-fixtures.mjs --steam  (only Steam names for players in match-*.json
+//                                                 and the first live matches in active-matches.json)
+//        node scripts/save-fixtures.mjs --live-players  (hero records + names for those live players)
 //        node scripts/save-fixtures.mjs --search "<query>"   (a player search + result ranks)
 //        node scripts/save-fixtures.mjs --player <account_id>  (one player's profile data)
 // Without a matchId it keeps the match fixture already saved, or picks a recent match.
@@ -56,9 +58,11 @@ async function saveSteamProfiles() {
   }
   // The players whose profiles are saved.
   for (const f of files) {
-    const m = /^player-(d+)-history.json$/.exec(f);
+    const m = /^player-(\d+)-history\.json$/.exec(f);
     if (m) ids.add(Number(m[1]));
   }
+  // Players in the first live matches, for the in-progress match page.
+  for (const p of (await liveFixturePlayers()).players) ids.add(p.account_id);
   // Only teammates the profile can show (10+ games together, top 10), not everyone.
   for (const f of files.filter((f) => /^player-\d+-mates\.json$/.test(f))) {
     const mates = JSON.parse(await readFile(path.join(OUT, f), "utf8"));
@@ -74,6 +78,40 @@ async function saveSteamProfiles() {
   await save("steam-profiles", profiles.map((p) => ({ account_id: p.account_id, personaname: p.personaname, avatarfull: p.avatarfull })));
 }
 
+// The in-progress match page needs names and hero records for one match's
+// players. Saving them for every live match would be thousands of accounts, so
+// only the first LIVE_FIXTURE_MATCHES normal matches in active-matches.json get them.
+const LIVE_FIXTURE_MATCHES = 10;
+
+async function liveFixturePlayers() {
+  const active = JSON.parse(await readFile(path.join(OUT, "active-matches.json"), "utf8"));
+  const matches = active.filter((m) => m.game_mode_parsed === "KECitadelGameModeNormal").slice(0, LIVE_FIXTURE_MATCHES);
+  return { matchIds: matches.map((m) => m.match_id), players: matches.flatMap((m) => m.players) };
+}
+
+// Each live player's all-time normal-mode record on the hero they're playing.
+async function saveLivePlayers() {
+  const { matchIds, players } = await liveFixturePlayers();
+  const accountIds = [...new Set(players.map((p) => p.account_id))];
+  const heroIds = [...new Set(players.map((p) => p.hero_id))];
+  const rows = await get(
+    `/v1/players/hero-stats?account_ids=${accountIds.join(",")}&hero_ids=${heroIds.join(",")}&game_mode=normal`,
+  );
+  const wanted = new Set(players.map((p) => `${p.account_id}:${p.hero_id}`));
+  await save(
+    "live-players-hero-stats",
+    rows
+      .filter((r) => wanted.has(`${r.account_id}:${r.hero_id}`))
+      .map((r) => ({ account_id: r.account_id, hero_id: r.hero_id, matches_played: r.matches_played, wins: r.wins })),
+  );
+  await saveSteamProfiles();
+  console.log(`live matches with player data: ${matchIds.join(", ")}`);
+}
+
+if (process.argv[2] === "--live-players") {
+  await saveLivePlayers();
+  process.exit(0);
+}
 if (process.argv[2] === "--live") {
   await saveLive();
   process.exit(0);

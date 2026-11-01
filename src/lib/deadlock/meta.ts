@@ -191,7 +191,8 @@ export function buildItemRows(stats: ItemStat[], items: Item[], totals: GameTota
 export type MatchupHero = { heroId: number; name: string; shortName: string };
 /** Row hero's win rate vs column hero minus 50, in points; null on the diagonal; "n/a" below the sample minimum. */
 export type MatchupCell = number | null | "n/a";
-export type MatchupGrid = { heroes: MatchupHero[]; cells: MatchupCell[][] };
+/** `heroes` are the rows; columns are `cols` when given (two lineups), else the same heroes (Meta). */
+export type MatchupGrid = { heroes: MatchupHero[]; cols?: MatchupHero[]; cells: MatchupCell[][] };
 
 /** "Lady Geist" → "Geist", for narrow column headers. */
 export function shortHeroName(name: string): string {

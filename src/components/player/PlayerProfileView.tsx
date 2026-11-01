@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SampleBadge } from "@/components/ui/SampleBadge";
+import { ArrowLink } from "@/components/ui/buttons";
 import { StatGrid, type Stat } from "@/components/ui/StatGrid";
 import { WinRateBar } from "@/components/ui/WinRateBar";
 import { RelativeTime } from "@/components/ui/RelativeTime";
@@ -32,7 +32,7 @@ function PlayerHero({ view, sample }: { view: PlayerView; sample: boolean }) {
     </>
   );
   return (
-    <section className="relative flex flex-col gap-3.5 overflow-hidden border-b border-line pt-[22px] pb-5 md:gap-[18px] md:pt-4 md:pb-6 xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-11 xl:pb-9">
+    <section className="relative flex flex-col gap-3.5 border-b border-line pt-[22px] pb-5 md:gap-[18px] md:pt-4 md:pb-6 xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-11 xl:pb-9">
       <HeroBackground variant="radial" className="absolute top-0 -right-2.5 h-full w-60 md:right-0 md:w-[420px] xl:w-[620px]" />
       <div className="relative flex items-center gap-3.5 md:items-end md:gap-[22px] xl:gap-7">
         <PlayerAvatar
@@ -253,9 +253,9 @@ export function PlayerProfileView({ view, sample }: { view: PlayerView; sample: 
             id="history-title"
             action={
               view.history[0] && (
-                <Link href={`/matches/${view.history[0].matchId}`} className="hidden text-sm text-brass hover:text-fg xl:inline">
-                  Open latest match →
-                </Link>
+                <ArrowLink href={`/matches/${view.history[0].matchId}`} className="-my-3 hidden xl:inline-flex">
+                  Open latest match
+                </ArrowLink>
               )
             }
           />

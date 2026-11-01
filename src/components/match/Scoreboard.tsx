@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeroTile } from "@/components/ui/HeroTile";
+import { ArrowLink, FOCUS_RING } from "@/components/ui/buttons";
 import { formatCompact, formatInt } from "@/lib/format";
 import { KING, MOTHER, TEAMS, type TeamId } from "@/lib/deadlock/teams";
 import type { ScoreRow } from "@/lib/deadlock/match";
@@ -100,7 +101,7 @@ function PhoneRow({ row, team }: { row: ScoreRow; team: TeamId }) {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
-        className="grid min-h-[52px] w-full grid-cols-[30px_minmax(0,1fr)_auto_16px] items-center gap-2.5 py-1.5 text-left"
+        className={cn("grid min-h-[52px] w-full grid-cols-[30px_minmax(0,1fr)_auto_16px] items-center gap-2.5 py-1.5 text-left", FOCUS_RING)}
       >
         <HeroTile name={row.heroName} iconUrl={row.heroIcon} size={30} borderClass={t.borderClass} />
         <span className="flex min-w-0 flex-col gap-px">
@@ -134,9 +135,9 @@ function PhoneRow({ row, team }: { row: ScoreRow; team: TeamId }) {
               ))}
             </dl>
             {row.playerName && (
-              <Link href={`/players/${row.accountId}`} className="self-start py-1 text-[13px] text-brass">
-                Player profile →
-              </Link>
+              <ArrowLink href={`/players/${row.accountId}`} className="self-start text-[13px]">
+                Player profile
+              </ArrowLink>
             )}
           </motion.div>
         )}

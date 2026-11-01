@@ -14,6 +14,8 @@ export type LiveMatchView = {
   spectators: number;
   heroes: Record<TeamId, number[]>;
   objectives: Record<TeamId, ObjectivesLeft>;
+  /** Raw objective bitmasks (see ./objectives.ts), for the live log's events. */
+  masks: Record<TeamId, number>;
   avgRank: { tier: number; subrank: number; name: string } | null;
 };
 

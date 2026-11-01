@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { cn } from "@/lib/utils";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { SampleBadge } from "@/components/ui/SampleBadge";
 import { SectionError } from "@/components/ui/SectionError";
+import { BracketButton, Segmented } from "@/components/ui/buttons";
 import { formatInt } from "@/lib/format";
 import {
   REGIONS,
@@ -53,7 +53,7 @@ export function LiveBoard({ initial, sample }: { initial: LiveBoardData | null; 
 
   return (
     <NowProvider initial={data?.fetchedAt ?? initial?.fetchedAt ?? 0}>
-      <section className="relative flex flex-col gap-3.5 overflow-hidden pt-[18px] md:border-b md:border-line md:pt-6 md:pb-[26px] xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-[52px] xl:pb-9">
+      <section className="relative flex flex-col gap-3.5 pt-[18px] md:border-b md:border-line md:pt-6 md:pb-[26px] xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-[52px] xl:pb-9">
         <HeroBackground desktopOnly className="absolute top-0 h-full md:-right-[60px] md:w-[460px] xl:-right-10 xl:w-[640px]" />
         <div className="relative flex max-w-[720px] flex-col gap-3.5 xl:gap-4">
           <p className="hidden font-mono text-[11px] uppercase tracking-[0.12em] text-fg-2 md:block xl:text-xs">
@@ -99,28 +99,18 @@ export function LiveBoard({ initial, sample }: { initial: LiveBoardData | null; 
               onChange={(v) => setParam("region", v === "all" ? null : v)}
             />
           </div>
-          <div role="group" aria-label="Filter" className="flex gap-1.5 md:hidden">
-            {[
-              { label: "Top ranked", value: String(TOP_RANKED_TIER) },
-              { label: "All", value: "all" },
-            ].map((chip) => {
-              const active = chip.value === "all" ? rank === "all" : rank === chip.value;
-              return (
-                <button
-                  key={chip.value}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setParam("rank", chip.value === "all" ? null : chip.value)}
-                  className={cn(
-                    "relative h-11 border px-3.5 text-[13px] font-medium",
-                    active ? "border-brass text-ink" : "border-line-strong text-muted-foreground",
-                  )}
-                >
-                  {active && <motion.span layoutId="live-chip" aria-hidden="true" className="absolute inset-0 bg-brass" />}
-                  <span className="relative">{chip.label}</span>
-                </button>
-              );
-            })}
+          <div className="flex gap-1.5 md:hidden">
+            <Segmented
+              label="Filter"
+              layoutId="live-chip"
+              options={[
+                { label: "Top ranked", value: String(TOP_RANKED_TIER) },
+                { label: "All", value: "all" },
+              ]}
+              value={rank === String(TOP_RANKED_TIER) ? rank : "all"}
+              onChange={(v) => setParam("rank", v === "all" ? null : v)}
+              className="gap-1.5"
+            />
             {sample && <SampleBadge className="self-center" />}
           </div>
         </div>
@@ -148,16 +138,14 @@ export function LiveBoard({ initial, sample }: { initial: LiveBoardData | null; 
               : "No live matches at this rank in this region right now."}
           </p>
           {data.matches.length > 0 && (
-            <button
-              type="button"
+            <BracketButton
               onClick={() => {
                 setParam("rank", null);
                 setParam("region", null);
               }}
-              className="h-11 border border-line-strong px-3.5 text-sm font-medium text-brass hover:border-line-muted"
             >
               Show all matches
-            </button>
+            </BracketButton>
           )}
         </div>
       ) : (
@@ -198,13 +186,9 @@ export function LiveBoard({ initial, sample }: { initial: LiveBoardData | null; 
           </ul>
 
           {rest.length > shown && (
-            <button
-              type="button"
-              onClick={() => setShown((n) => n + PAGE)}
-              className="mt-4 h-11 w-full border border-line-strong text-sm font-medium text-brass hover:border-line-muted md:mt-5 md:w-auto md:self-start md:px-4"
-            >
+            <BracketButton onClick={() => setShown((n) => n + PAGE)} className="mt-4 w-full md:mt-5 md:w-auto md:self-start">
               Show more matches ({formatInt(rest.length - shown)} left)
-            </button>
+            </BracketButton>
           )}
 
           <div className="mt-5 hidden md:block">

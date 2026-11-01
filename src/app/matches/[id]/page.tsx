@@ -8,7 +8,7 @@ import { MatchReportView } from "@/components/match/MatchReportView";
 import { SectionError } from "@/components/ui/SectionError";
 import { getHeroes, getItems, getMatchReport, getPlayerNames, getRanks } from "@/lib/deadlock/api";
 import { isSampleData, type ApiFailure } from "@/lib/deadlock/client";
-import { getLiveBoard } from "@/lib/deadlock/live";
+import { getActiveMatch, getLiveBoard, getLiveDraft, getLiveLineups } from "@/lib/deadlock/live";
 import { buildMatchView } from "@/lib/deadlock/match";
 import { settle } from "@/lib/deadlock/settle";
 import { formatInt } from "@/lib/format";
@@ -37,7 +37,18 @@ async function MatchContent({ params }: { params: PageProps<"/matches/[id]">["pa
   const board = await settle(getLiveBoard());
   const live = board.ok ? board.data.matches.find((m) => m.id === matchId) : undefined;
   if (board.ok && live) {
-    return <LiveMatchSummary matchId={matchId} initial={{ fetchedAt: board.data.fetchedAt, match: live, heroes: board.data.heroes }} />;
+    // Player rows and the draft stream in after the souls card (not awaited here).
+    const raw = getActiveMatch(matchId);
+    const lineups = settle(raw.then((m) => (m ? getLiveLineups(m) : Promise.reject(new Error(`Match ${matchId} left the live list`)))));
+    const draft = settle(getLiveDraft(live.heroes));
+    return (
+      <LiveMatchSummary
+        matchId={matchId}
+        initial={{ fetchedAt: board.data.fetchedAt, match: live, heroes: board.data.heroes }}
+        lineups={lineups}
+        draft={draft}
+      />
+    );
   }
 
   // 2. Finished: the full report (metadata cached 7 days).

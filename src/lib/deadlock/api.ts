@@ -7,6 +7,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { deadlockFetch } from "./client";
 import { loadPlayerRanks } from "./rank-batcher";
 import {
+  accountHeroStatsSchema,
   activeMatchesSchema,
   gameStatsSchema,
   heroCounterStatsSchema,
@@ -374,6 +375,43 @@ export async function getMatchAverageRank(matchId: number, accountIds: number[])
   if (steps.length < MIN_RANKED_PLAYERS) return null;
   const avg = Math.round(steps.reduce((sum, s) => sum + s, 0) / steps.length);
   return { tier: Math.floor(avg / 6), subrank: (avg % 6) + 1, rankedPlayers: steps.length };
+}
+
+/**
+ * Each player's rank in one live match, cached per match for 1 h (players don't
+ * change mid-match). Goes through ./rank-batcher like getMatchAverageRank.
+ */
+export async function getLivePlayerRanks(matchId: number, accountIds: number[]): Promise<{ accountId: number; badge: Badge | null }[]> {
+  "use cache";
+  cacheLife("liveRank");
+  cacheTag("live-rank", `live-rank-${matchId}`);
+  const ranks = await loadPlayerRanks(accountIds);
+  return accountIds.map((id) => ({ accountId: id, badge: ranks.get(id)?.badge ?? null }));
+}
+
+export type LiveHeroRecord = { accountId: number; heroId: number; matches: number; wins: number };
+
+/**
+ * Each live player's all-time normal-mode record on the hero they're playing,
+ * in one request for the whole match. Cached per match for 1 h.
+ */
+export async function getLiveHeroRecords(matchId: number, players: { accountId: number; heroId: number }[]): Promise<LiveHeroRecord[]> {
+  "use cache";
+  cacheLife("liveRank");
+  cacheTag("live-players", `live-players-${matchId}`);
+  const raw = await deadlockFetch("/v1/players/hero-stats", accountHeroStatsSchema, {
+    query: {
+      account_ids: [...new Set(players.map((p) => p.accountId))].join(","),
+      hero_ids: [...new Set(players.map((p) => p.heroId))].join(","),
+      game_mode: "normal",
+    },
+    fixture: "live-players-hero-stats",
+  });
+  // The response crosses every account with every hero asked for; keep each player's own hero.
+  const wanted = new Set(players.map((p) => `${p.accountId}:${p.heroId}`));
+  return raw
+    .filter((r) => wanted.has(`${r.account_id}:${r.hero_id}`))
+    .map((r) => ({ accountId: r.account_id, heroId: r.hero_id, matches: r.matches_played, wins: r.wins }));
 }
 
 /**

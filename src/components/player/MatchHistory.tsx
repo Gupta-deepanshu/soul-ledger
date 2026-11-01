@@ -8,6 +8,7 @@ import { HeroTile } from "@/components/ui/HeroTile";
 import { RelativeTime } from "@/components/ui/RelativeTime";
 import { formatCompact, formatDuration, formatSigned } from "@/lib/format";
 import type { HistoryRow } from "@/lib/deadlock/player";
+import { BracketButton } from "@/components/ui/buttons";
 
 const PAGE = 10;
 
@@ -102,13 +103,9 @@ export function MatchHistory({ rows }: { rows: HistoryRow[] }) {
       </ul>
 
       {rows.length > shown && (
-        <button
-          type="button"
-          onClick={() => setShown((n) => n + PAGE)}
-          className="h-11 w-full border border-line-strong text-sm font-medium text-brass hover:border-line-muted md:w-auto md:self-start md:px-4"
-        >
+        <BracketButton onClick={() => setShown((n) => n + PAGE)} className="w-full md:w-auto md:self-start">
           Show more matches
-        </button>
+        </BracketButton>
       )}
     </>
   );

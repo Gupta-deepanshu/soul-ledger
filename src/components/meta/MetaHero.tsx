@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SampleBadge } from "@/components/ui/SampleBadge";
+import { ArrowLink } from "@/components/ui/buttons";
 import { getPatchWindows, getRanks } from "@/lib/deadlock/api";
 import { isSampleData } from "@/lib/deadlock/client";
 import { describeFilters, rankFilterOptions } from "@/lib/deadlock/meta";
@@ -12,7 +13,7 @@ import { InkTitle } from "@/components/ui/InkTitle";
 /** Page hero: title and blurb render at once; the eyebrow and controls depend on the patch and filter. */
 export function MetaHero({ minTier }: { minTier: Promise<number | null> }) {
   return (
-    <section className="relative flex flex-col gap-3 overflow-hidden border-b border-line pt-[22px] pb-5 md:gap-4 md:pt-6 md:pb-7 xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-14 xl:pb-10">
+    <section className="relative flex flex-col gap-3 border-b border-line pt-[22px] pb-5 md:gap-4 md:pt-6 md:pb-7 xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-14 xl:pb-10">
       <HeroBackground className="absolute top-0 -right-5 h-full w-60 md:-right-[60px] md:w-[460px] xl:-right-10 xl:w-[640px]" />
       <div className="relative flex max-w-[760px] flex-col gap-3 md:gap-4 xl:gap-[18px]">
         <Suspense fallback={<Eyebrow text="Patch · Ranked + unranked · All regions" />}>
@@ -62,9 +63,9 @@ async function HeroControls({ minTier }: { minTier: Promise<number | null> }) {
   const patchDate = windows ? formatDate(windows.current.since) : null;
   const notesLink = (label: string) =>
     patch ? (
-      <a href={patch.url} target="_blank" rel="noreferrer" className="text-brass hover:text-fg">
+      <ArrowLink href={patch.url} target="_blank" rel="noreferrer" className="-my-3 align-middle">
         {label}
-      </a>
+      </ArrowLink>
     ) : null;
 
   return (
@@ -73,13 +74,13 @@ async function HeroControls({ minTier }: { minTier: Promise<number | null> }) {
         <div className="hidden xl:contents">
           <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-2">Current patch</span>
           <span className="font-serif text-[40px] leading-none">{patchDate}</span>
-          <span className="text-sm">{notesLink("Read the patch notes →")}</span>
+          <span className="text-sm">{notesLink("Read the patch notes")}</span>
         </div>
       )}
       <RankFilter options={rankFilterOptions(ranks)} value={tier == null ? "all" : String(tier)} />
       {patchDate && (
         <span className="hidden text-sm text-fg-2 md:inline xl:hidden">
-          Patch <span className="text-fg">{patchDate}</span> · {notesLink("notes →")}
+          Patch <span className="text-fg">{patchDate}</span> · {notesLink("notes")}
         </span>
       )}
     </>

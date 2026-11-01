@@ -91,7 +91,7 @@ export function FeaturedMatch({ match, heroes, variant }: FeaturedMatchProps) {
           <span className="flex shrink-0 items-center gap-1.5 text-brass">
             <LiveDot className="size-1.5 md:size-[7px]" />
             <MatchClock startTime={match.startTime} />
-            <span className="hidden md:inline xl:hidden">· {match.spectators} watching</span>
+            <span className={featured ? "hidden md:inline xl:hidden" : undefined}>· {match.spectators} watching</span>
           </span>
         </div>
 
@@ -109,30 +109,34 @@ export function FeaturedMatch({ match, heroes, variant }: FeaturedMatchProps) {
 
         <TeamSplitBar souls={match.souls} className="h-2 gap-[3px] md:h-2.5" />
 
-        {/* Phone: tile rows (names in the summary variant). Tablet/desktop: named lineups. */}
-        <div className={cn("flex justify-between gap-2", variant === "summary" ? "hidden" : "md:hidden")}>
-          <TileRow match={match} team={KING} heroes={heroes} />
-          <TileRow match={match} team={MOTHER} heroes={heroes} />
-        </div>
-        <div className={cn("grid-cols-2 gap-5 xl:gap-6", variant === "summary" ? "grid" : "hidden md:grid")}>
-          <Lineup match={match} team={KING} heroes={heroes} />
-          <Lineup match={match} team={MOTHER} heroes={heroes} />
-        </div>
-
-        <StillStandingGrid match={match} className={variant === "summary" ? "xl:hidden" : "hidden md:grid xl:hidden"} />
+        {/* The summary page shows lineups and objectives in their own cards below. */}
         {featured && (
-          <p className="font-mono text-[11px] text-muted-foreground md:hidden">
-            {match.spectators} spectators · {objectiveSummary(match)}
-          </p>
+          <>
+            {/* Phone: tile rows. Tablet/desktop: named lineups. */}
+            <div className="flex justify-between gap-2 md:hidden">
+              <TileRow match={match} team={KING} heroes={heroes} />
+              <TileRow match={match} team={MOTHER} heroes={heroes} />
+            </div>
+            <div className="hidden grid-cols-2 gap-5 md:grid xl:gap-6">
+              <Lineup match={match} team={KING} heroes={heroes} />
+              <Lineup match={match} team={MOTHER} heroes={heroes} />
+            </div>
+            <StillStandingGrid match={match} className="hidden md:grid xl:hidden" />
+            <p className="font-mono text-[11px] text-muted-foreground md:hidden">
+              {match.spectators} spectators · {objectiveSummary(match)}
+            </p>
+          </>
         )}
       </div>
 
-      <div className="hidden min-w-0 flex-col gap-3.5 border-l border-line pl-7 xl:flex xl:flex-[1_1_280px]">
-        <h2 className="font-serif text-[28px] leading-none">Still standing</h2>
-        <span className="text-[13px] text-muted-foreground">Objectives each side has left</span>
-        <StillStandingPips match={match} />
-        <span className="mt-auto font-mono text-xs text-muted-foreground">{match.spectators} spectators</span>
-      </div>
+      {featured && (
+        <div className="hidden min-w-0 flex-col gap-3.5 border-l border-line pl-7 xl:flex xl:flex-[1_1_280px]">
+          <h2 className="font-serif text-[28px] leading-none">Still standing</h2>
+          <span className="text-[13px] text-muted-foreground">Objectives each side has left</span>
+          <StillStandingPips match={match} />
+          <span className="mt-auto font-mono text-xs text-muted-foreground">{match.spectators} spectators</span>
+        </div>
+      )}
     </>
   );
 

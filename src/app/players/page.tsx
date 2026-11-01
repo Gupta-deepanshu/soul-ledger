@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function PlayersPage({ searchParams }: PageProps<"/players">) {
   return (
-    <section className="relative flex flex-col gap-3 overflow-hidden pt-[22px] pb-6 md:gap-4 md:pt-6 md:pb-8 xl:pt-14 xl:pb-10">
+    <section className="relative flex flex-col gap-3 pt-[22px] pb-6 md:gap-4 md:pt-6 md:pb-8 xl:pt-14 xl:pb-10">
       <HeroBackground className="absolute top-0 -right-5 h-48 w-60 md:-right-[60px] md:h-56 md:w-[460px] xl:-right-10 xl:h-80 xl:w-[640px]" />
       <p className="relative font-mono text-[10px] uppercase tracking-[0.12em] text-fg-2 md:text-[11px] xl:text-xs">
         Player lookup<span className="hidden md:inline"> · public match data</span>

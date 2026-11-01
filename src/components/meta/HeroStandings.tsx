@@ -7,6 +7,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroTile } from "@/components/ui/HeroTile";
 import { WinRateBar } from "@/components/ui/WinRateBar";
 import { Delta } from "@/components/ui/Delta";
+import { BracketButton, FOCUS_RING } from "@/components/ui/buttons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCompact, formatInt, formatKda, formatPercent } from "@/lib/format";
 import type { HeroRow } from "@/lib/deadlock/meta";
@@ -28,14 +29,13 @@ export function HeroStandings({ rows, minMatches, index }: HeroStandingsProps) {
 
   const toggle = (long: boolean) =>
     canExpand ? (
-      <button
-        type="button"
+      <BracketButton
         onClick={() => setShowAll((v) => !v)}
         aria-expanded={showAll}
-        className="h-11 border border-line-strong px-3 text-[13px] font-medium text-brass hover:border-line-muted md:text-[13px] xl:px-3.5 xl:text-sm"
+        className="px-3 text-[13px] xl:px-3.5 xl:text-sm"
       >
         {showAll ? "Show top 10" : long ? `Show all ${rows.length} heroes` : `Show all ${rows.length}`}
-      </button>
+      </BracketButton>
     ) : null;
 
   return (
@@ -73,7 +73,7 @@ export function HeroStandings({ rows, minMatches, index }: HeroStandingsProps) {
               <th scope="col" className="py-2 font-normal xl:py-2.5">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button type="button" className="cursor-help uppercase underline decoration-tick decoration-dotted underline-offset-4">
+                    <button type="button" className={`cursor-help uppercase underline decoration-tick decoration-dotted underline-offset-4 ${FOCUS_RING}`}>
                       Pick
                     </button>
                   </TooltipTrigger>

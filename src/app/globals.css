@@ -23,6 +23,7 @@
   --color-fg-2: var(--fg-2);
   --color-faint: var(--faint);
   --color-brass: var(--brass);
+  --color-brass-deep: var(--brass-deep);
   --color-king: var(--king);
   --color-mother: var(--mother);
   --color-mother-text: var(--mother-text);
@@ -87,6 +88,8 @@
   --fg-2: #cfc4ae;
   --faint: #8a7f6e;
   --brass: #d9b26f;
+  /* Stamp button hover fill; ink text on it is 5.85:1. */
+  --brass-deep: #b08643;
   --king: #f0912e;
   --mother: #5e8bff;
   --mother-text: #8fa9ff;

@@ -235,6 +235,16 @@ export const playerHeroStatsSchema = z.array(
   }),
 );
 
+/** `/v1/players/hero-stats` for several accounts: one row per (account, hero). */
+export const accountHeroStatsSchema = z.array(
+  z.object({
+    account_id: int,
+    hero_id: int,
+    matches_played: int,
+    wins: int,
+  }),
+);
+
 export const mateStatsSchema = z.array(
   z.object({
     mate_id: int,

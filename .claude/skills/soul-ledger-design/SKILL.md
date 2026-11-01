@@ -121,9 +121,38 @@ shadcn variables: `--background: ink`, `--card/--popover: surface`,
 - **SampleBadge** — mono uppercase in a dashed `line-muted` border. Only shown while data is not live.
 - **Footer** — "Fan project. Not affiliated with or endorsed by Valve. Data via deadlock-api.com." on every page.
 
+## 5. Buttons (`src/components/ui/buttons/`)
+
+Every button and button-like link uses one of these. Don't style a raw `<button>`
+or `<Link>` as a button. Shared rules (`ButtonShell`): square, ≥ 44 px tall,
+`text-sm font-medium`, a 2 px brass outline for **keyboard focus only**
+(`FOCUS_RING`), `loading` swaps the label for three dots and keeps the width,
+`href` renders a Next.js link (`target`/`rel` for external pages). Hover/press
+motion follows the variants rest → hover → pressed; with reduced motion each
+type falls back to a colour-only hover.
+
+| Type | Look | Hover / press | Use for |
+|---|---|---|---|
+| `StampButton` | `brass` fill, `ink` text | `brass-deep` wipes in from the left; press 0.97 | The one primary action per view: Search, Refresh matches |
+| `BracketButton` | 1 px `line-strong` outline, `fg` text | Four brass corner brackets slide in; press `surface-2` | Secondary actions: Show more, Show all heroes, Try again, Load the report, recent-search chips |
+| `IconButton` | 44 px square outline on `surface` | Icon nudges 2 px; desktop magnet pull ≤ 4 px | Icon-only actions (needs `aria-label`): the tablet/phone search button |
+| `ArrowLink` | `brass` text + trailing → (added for you) | Arrow slides 3 px right | Navigation in text: patch notes, Open latest match, Player profile. Inline in a line of text: `-my-3` keeps the line height |
+| `Segmented` | Row of `aria-pressed` toggles | Colour only; highlight slides via shared `layoutId` | Filters that aren't tabs: Live rank chips |
+
+- `SegmentIndicator` is the sliding highlight on its own, for Radix Tabs and nav
+  links (which keep their own semantics): `underline` (top nav), `fill` (rank
+  chips), `border` with the slot colours (Weapon/Vitality/Spirit tabs).
+- `CooldownTicks` sits under a disabled `StampButton` while a rate limit runs
+  (player Refresh: 60 s, 25 ticks emptying right → left).
+- Don't write "→" in an `ArrowLink` label, and don't put `Loading…`/`Retrying…`
+  text in a label: pass `loading`.
+- Table-row disclosures (mobile scoreboard rows) and small text actions ("Clear",
+  tooltip triggers) stay plain `<button>`s, with `FOCUS_RING`.
+- Use `/dev/buttons` (development only) to see every type in every state.
+
 Icons: lucide-react, 18–20 px, 1.5 stroke. No emoji.
 
-## 5. Motion (`import { motion } from "motion/react"`)
+## 6. Motion (`import { motion } from "motion/react"`)
 
 One easing everywhere: `[0.22, 1, 0.36, 1]`. Durations 200–500 ms. Phones use
 ~70% of desktop durations and smaller distances.
@@ -179,7 +208,7 @@ the only GSAP use on the site)
 - Animate only `transform`, `opacity` and SVG `pathLength` (the hero background draws on its own canvas, and InkTitle animates SVG stroke dashes and a clip rect through GSAP; both are exempt).
 - No smooth-scroll libraries, parallax or scroll-jacking.
 
-## 6. Accessibility checklist
+## 7. Accessibility checklist
 
 - Contrast ≥ 4.5:1 for text (the tokens above pass on `ink` and `surface`; don't add lighter greys).
 - Touch targets ≥ 44 px.

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ItemChip, SLOT_STYLES } from "@/components/ui/ItemChip";
 import { TickMeter } from "@/components/ui/TickMeter";
+import { FOCUS_RING, SegmentIndicator } from "@/components/ui/buttons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatInt, formatPercent, formatSigned } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -51,16 +52,12 @@ export function ItemsThatWin({ rows, index }: { rows: Record<ItemSlot, ItemRow[]
                   className={cn(
                     "relative h-11 flex-none rounded-none border border-line-strong px-3 text-[13px] font-medium text-muted-foreground after:hidden xl:h-10 xl:px-3.5",
                     "data-active:border-transparent data-active:bg-transparent dark:data-active:border-transparent dark:data-active:bg-transparent",
+                    "transition-colors hover:text-fg focus-visible:border-line-strong focus-visible:ring-0",
+                    FOCUS_RING,
                     ACTIVE_TEXT[s],
                   )}
                 >
-                  {slot === s && (
-                    <motion.span
-                      layoutId="item-slot-highlight"
-                      aria-hidden="true"
-                      className={cn("absolute -inset-px border", SLOT_STYLES[s].fill)}
-                    />
-                  )}
+                  {slot === s && <SegmentIndicator layoutId="item-slot-highlight" look="border" className={SLOT_STYLES[s].fill} />}
                   <span className="relative">{SLOT_STYLES[s].label}</span>
                 </TabsTrigger>
               ))}

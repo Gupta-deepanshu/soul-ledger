@@ -58,11 +58,25 @@ function token(name: string, fallback: string) {
 type Mode = "pending" | "waves" | "halftone";
 
 /**
+ * Fills the hero (which must be `relative`) and clips the background to it.
+ * The clipping lives here, not on the hero, so the hero's own controls (search
+ * box, filters, buttons) can draw their focus outlines past its edges.
+ */
+function ClipLayer({ children }: { children: React.ReactNode }) {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {children}
+    </div>
+  );
+}
+
+/**
  * Animated hero background: React Bits Shape Waves, brass shapes on ink at
  * low contrast, looping, with the demo's cursor splash (lighter shapes ripple
  * out from the pointer). Decorative only — aria-hidden and pointer-events: none
  * (the splash listens on window, so links and inputs above it still work);
  * sized and placed by `className` inside the hero (never behind cards).
+ * The hero must be `relative` but not `overflow-hidden`: this clips itself.
  * The wrapper opacity caps every pixel, splash included, so the small muted
  * labels over it keep >= 4.5:1. Reduced motion: still frame, no splash.
  * Falls back to the CSS halftone without WebGPU or if the GPU errors.
@@ -103,13 +117,14 @@ export function HeroBackground({
 
   if (mode === "halftone") {
     return (
-      <motion.div
-        aria-hidden="true"
-        className={cn(box, style.halftone)}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: titleDrawing ? 0 : 1 }}
-        transition={{ duration: 0.4 }}
-      />
+      <ClipLayer>
+        <motion.div
+          className={cn(box, style.halftone)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: titleDrawing ? 0 : 1 }}
+          transition={{ duration: 0.4 }}
+        />
+      </ClipLayer>
     );
   }
 
@@ -118,39 +133,40 @@ export function HeroBackground({
   const fg = token("--fg", "#efe6d4");
   const tier = phone ? PHONE : DESKTOP;
   return (
-    <motion.div
-      aria-hidden="true"
-      className={cn(box, style.mask)}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: titleDrawing ? 0 : WAVES_OPACITY }}
-      transition={{ duration: 0.6 }}
-    >
-      <ShapeWaves
-        // Remount when crossing the phone breakpoint so the pixel cap applies.
-        key={phone ? "phone" : "desktop"}
-        shapes="mixed"
-        cellSize={tier.cellSize}
-        maxDpr={tier.maxDpr}
-        dotSize={0.75}
-        color={brass}
-        hoverColor={fg}
-        backgroundColor={ink}
-        speed={1}
-        scale={1}
-        contrast={0.8}
-        brightness={0.2}
-        fade={0.25}
-        glow={0}
-        interactive={!reduceMotion}
-        splashRadius={40}
-        splashStrength={0.4}
-        intro
-        introDuration={1.6}
-        onError={(error) => {
-          if (process.env.NODE_ENV !== "production") console.warn("[HeroBackground] WebGPU failed, using the halftone:", error);
-          setMode("halftone");
-        }}
-      />
-    </motion.div>
+    <ClipLayer>
+      <motion.div
+        className={cn(box, style.mask)}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: titleDrawing ? 0 : WAVES_OPACITY }}
+        transition={{ duration: 0.6 }}
+      >
+        <ShapeWaves
+          // Remount when crossing the phone breakpoint so the pixel cap applies.
+          key={phone ? "phone" : "desktop"}
+          shapes="mixed"
+          cellSize={tier.cellSize}
+          maxDpr={tier.maxDpr}
+          dotSize={0.75}
+          color={brass}
+          hoverColor={fg}
+          backgroundColor={ink}
+          speed={1}
+          scale={1}
+          contrast={0.8}
+          brightness={0.2}
+          fade={0.25}
+          glow={0}
+          interactive={!reduceMotion}
+          splashRadius={40}
+          splashStrength={0.4}
+          intro
+          introDuration={1.6}
+          onError={(error) => {
+            if (process.env.NODE_ENV !== "production") console.warn("[HeroBackground] WebGPU failed, using the halftone:", error);
+            setMode("halftone");
+          }}
+        />
+      </motion.div>
+    </ClipLayer>
   );
 }
