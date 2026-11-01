@@ -240,6 +240,31 @@ export async function getPlayerHeroRecords(accountId: number): Promise<PlayerHer
   return raw.map((h) => ({ heroId: h.hero_id, matches: h.matches_played, wins: h.wins }));
 }
 
+/**
+ * The player's record against each enemy hero (normal mode, all time), for
+ * "Toughest heroes". The API returns one row per (own hero, enemy hero) pair,
+ * so rows are summed per enemy hero. Each enemy hero appears at most once per
+ * match, so the sum is matches played against it. Only covers matches the
+ * analytics data has, which can be fewer than the full history.
+ */
+export async function getPlayerEnemyHeroes(accountId: number): Promise<PlayerHeroRecord[]> {
+  "use cache";
+  cacheLife("player");
+  cacheTag("player", `player-${accountId}`);
+  const raw = await deadlockFetch("/v1/analytics/hero-counter-stats", heroCounterStatsSchema, {
+    query: { account_id: accountId, game_mode: "normal", min_unix_timestamp: 0, min_matches: 1 },
+    fixture: `player-${accountId}-enemy-heroes`,
+  });
+  const byEnemy = new Map<number, PlayerHeroRecord>();
+  for (const r of raw) {
+    const rec = byEnemy.get(r.enemy_hero_id) ?? { heroId: r.enemy_hero_id, matches: 0, wins: 0 };
+    rec.matches += r.matches_played;
+    rec.wins += r.wins;
+    byEnemy.set(r.enemy_hero_id, rec);
+  }
+  return [...byEnemy.values()];
+}
+
 export async function getPlayerMates(accountId: number): Promise<PlayerMate[]> {
   "use cache";
   cacheLife("player");

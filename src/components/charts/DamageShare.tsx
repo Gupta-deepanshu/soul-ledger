@@ -5,6 +5,16 @@ import { motion, useInView } from "motion/react";
 import { formatCompact } from "@/lib/format";
 import { KING, MOTHER, TEAMS, type TeamId } from "@/lib/deadlock/teams";
 import type { ScoreRow } from "@/lib/deadlock/match";
+import { bestText } from "@/lib/contrast";
+
+// Label text inside a segment: ink or fg, whichever contrasts more with the
+// shade. A couple of mid shades reach 4.5:1 with neither, so those labels get
+// a dark plate behind fg text instead.
+function segmentLabel(shade: string): { color: string; plate: boolean } {
+  const best = bestText(shade);
+  if (best.ratio >= 4.5) return { color: `var(--${best.text})`, plate: false };
+  return { color: "var(--fg)", plate: true };
+}
 
 /**
  * One stacked bar per team: each player's share of the team's hero damage,
@@ -33,23 +43,26 @@ export function DamageShare({ scoreboard }: { scoreboard: Record<TeamId, ScoreRo
               aria-label={`${rows[0]?.heroName} did ${rows[0] ? pct(rows[0]) : "0%"} of ${t.name}'s hero damage.`}
               className="flex h-7 gap-0.5 md:h-10"
             >
-              {rows.map((r, i) => (
-                <motion.div
-                  key={r.accountId}
-                  className="flex min-w-0 origin-left items-end overflow-hidden pb-1 pl-1.5"
-                  style={{ flexGrow: r.heroDamage, flexBasis: 0, background: t.shades[i] }}
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: inView ? 1 : 0 }}
-                  transition={{ delay: inView ? i * 0.05 : 0, duration: 0.5 }}
-                >
-                  <span
-                    className="hidden font-mono text-[10px] whitespace-nowrap md:inline"
-                    style={{ color: i < 3 ? "var(--ink)" : "var(--fg)" }}
+              {rows.map((r, i) => {
+                const lbl = segmentLabel(t.shades[i]);
+                return (
+                  <motion.div
+                    key={r.accountId}
+                    className="flex min-w-0 origin-left items-end overflow-hidden pb-1 pl-1.5"
+                    style={{ flexGrow: r.heroDamage, flexBasis: 0, background: t.shades[i] }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: inView ? 1 : 0 }}
+                    transition={{ delay: inView ? i * 0.05 : 0, duration: 0.5 }}
                   >
-                    {r.heroName} {pct(r)}
-                  </span>
-                </motion.div>
-              ))}
+                    <span
+                      className={`hidden font-mono text-[10px] whitespace-nowrap md:inline ${lbl.plate ? "-ml-0.5 bg-ink/70 px-0.5" : ""}`}
+                      style={{ color: lbl.color }}
+                    >
+                      {r.heroName} {pct(r)}
+                    </span>
+                  </motion.div>
+                );
+              })}
             </div>
             <ul aria-hidden="true" className="grid grid-cols-3 gap-x-2.5 gap-y-1 md:hidden">
               {rows.map((r, i) => (

@@ -4,7 +4,7 @@
 import type { Badge, Hero, PlayerHeroRecord, PlayerMatch, PlayerMate, Rank } from "./types";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
-/** Teammates and own heroes need this many games before they're listed. */
+/** Teammates and enemy heroes need this many games before they're listed. */
 export const MIN_GAMES = 10;
 const CLIMB_MATCHES = 60;
 const FORM_MATCHES = 20;
@@ -63,7 +63,8 @@ export type PlayerView = {
   history: HistoryRow[];
   pool: PoolRow[];
   bestWith: MateRow[];
-  strugglesOn: PoolRow[];
+  /** Enemy heroes the player wins least against (10+ games). */
+  toughestHeroes: PoolRow[];
 };
 
 export function rankLabel(badge: Badge | null, ranks: Rank[]): RankLabel | null {
@@ -124,6 +125,8 @@ type Inputs = {
   history: PlayerMatch[];
   rank: Badge | null;
   heroRecords: PlayerHeroRecord[];
+  /** Record against each enemy hero (`heroId` is the enemy's hero). */
+  enemyHeroes: PlayerHeroRecord[];
   mates: PlayerMate[];
   mateNames: Record<number, string>;
   heroes: Hero[];
@@ -162,7 +165,8 @@ export function buildPlayerView(input: Inputs): PlayerView {
     .sort((a, b) => b.matches - a.matches)
     .slice(0, 5)
     .map((r) => ({ heroId: r.heroId, name: heroName(r.heroId), matches: r.matches, winRate: r.wins / r.matches }));
-  const strugglesOn = records
+  // Enemy heroes, not the player's own: their own heroes are already in Hero pool.
+  const toughestHeroes = input.enemyHeroes
     .filter((r) => r.matches >= MIN_GAMES)
     .map((r) => ({ heroId: r.heroId, name: heroName(r.heroId), matches: r.matches, winRate: r.wins / r.matches }))
     .sort((a, b) => a.winRate - b.winRate)
@@ -205,6 +209,6 @@ export function buildPlayerView(input: Inputs): PlayerView {
     })),
     pool,
     bestWith,
-    strugglesOn,
+    toughestHeroes,
   };
 }

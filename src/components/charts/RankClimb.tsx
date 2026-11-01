@@ -3,10 +3,16 @@
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import type { ClimbPoint } from "@/lib/deadlock/player";
+import { useViewBoxScale } from "./useViewBoxScale";
 
 const W = 800;
 const H = 230;
-const X0 = 124;
+/** Left edge of the plot when the tier labels fit (desktop). */
+const X0_MIN = 124;
+/** On-screen size of the tier labels, in CSS px. */
+const LABEL_PX = 11;
+/** Geist Mono advance width per em, rounded up. */
+const MONO_EM = 0.62;
 const X1 = 784;
 const TOP = 14;
 const BOTTOM = 210;
@@ -19,6 +25,10 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
 export function RankClimb({ climb, tierNames }: { climb: ClimbPoint[]; tierNames: Record<number, string> }) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { once: true });
+  // Size labels to 11 px on screen; widen the label column if they need it.
+  const k = useViewBoxScale(ref, W);
+  const tierLabel = (tier: number) => (tierNames[tier] ?? `T${tier}`).slice(0, 8);
+  const fontSize = k == null ? null : LABEL_PX * k;
 
   const minTier = Math.min(...climb.map((p) => p.tier));
   const maxTier = Math.min(11, Math.max(...climb.map((p) => p.tier)) + 1);
@@ -26,6 +36,8 @@ export function RankClimb({ climb, tierNames }: { climb: ClimbPoint[]; tierNames
   const steps = tiers.length * 6;
   const y = (step: number) => BOTTOM - ((step - minTier * 6 + 0.5) / steps) * (BOTTOM - TOP);
   const bandH = (BOTTOM - TOP) / tiers.length;
+  const longest = Math.max(...tiers.map((tier) => tierLabel(tier).length));
+  const X0 = fontSize == null ? X0_MIN : Math.max(X0_MIN, Math.ceil(longest * MONO_EM * fontSize) + 16);
   const x = (i: number) => (climb.length === 1 ? X1 : X0 + (i / (climb.length - 1)) * (X1 - X0));
 
   let path = `M${x(0).toFixed(1)},${y(climb[0].step).toFixed(1)}`;
@@ -48,12 +60,13 @@ export function RankClimb({ climb, tierNames }: { climb: ClimbPoint[]; tierNames
             {i % 2 === 0 && <rect x={X0} y={top} width={X1 - X0} height={bandH} fill="var(--surface-2)" />}
             <text
               x={X0 - 10}
-              y={top + bandH / 2 + 4}
+              y={top + bandH / 2 + (fontSize == null ? 4 : fontSize * 0.35)}
               textAnchor="end"
               fill="var(--faint)"
               className="font-mono text-[22px] uppercase md:text-[15px]"
+              style={fontSize == null ? undefined : { fontSize }}
             >
-              {(tierNames[tier] ?? `T${tier}`).slice(0, 8)}
+              {tierLabel(tier)}
             </text>
           </g>
         );

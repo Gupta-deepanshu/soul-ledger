@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ItemChip, SLOT_STYLES } from "@/components/ui/ItemChip";
 import { TickMeter } from "@/components/ui/TickMeter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatInt, formatPercent } from "@/lib/format";
+import { formatInt, formatPercent, formatSigned } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ItemRow } from "@/lib/deadlock/meta";
 import type { ItemSlot } from "@/lib/deadlock/types";
@@ -34,8 +34,8 @@ export function ItemsThatWin({ rows, index }: { rows: Record<ItemSlot, ItemRow[]
           className="max-md:flex-col max-md:items-stretch"
           caption={
             <>
-              <span className="hidden xl:inline">Win rate when bought · ticks run 44% → 56%</span>
-              <span className="xl:hidden">Ticks run 44% → 56%</span>
+              <span className="hidden xl:inline">Win rate vs items of the same cost · ticks run −6 → +6 pts</span>
+              <span className="xl:hidden">Vs same-cost items · −6 → +6 pts</span>
             </>
           }
           action={
@@ -86,13 +86,21 @@ export function ItemsThatWin({ rows, index }: { rows: Record<ItemSlot, ItemRow[]
                       <div className="flex min-w-0 flex-col gap-0.5">
                         <span className="truncate text-sm">{item.name}</span>
                         <span className="font-mono text-[11px] text-muted-foreground">
-                          {item.cost != null && `${formatInt(item.cost)} souls · `}bought in {formatPercent(item.buyShare, 0)}
+                          {item.cost != null && `${formatInt(item.cost)} souls · `}
+                          {formatPercent(item.winRate)} win · {formatPercent(item.buyShare, 0)} buy
                         </span>
                       </div>
                     </div>
-                    <TickMeter winRate={item.winRate} className="col-span-2 row-start-2 md:order-2 md:col-span-1 md:row-auto" />
-                    <span className="col-start-2 row-start-1 text-right font-mono text-sm md:order-3 md:col-auto md:row-auto md:text-[15px]">
-                      {formatPercent(item.winRate)}
+                    {/* The meter's 44–56 range is centred on 50, so 0.5 + lift reads as −6 → +6 points. */}
+                    <TickMeter winRate={0.5 + item.lift} className="col-span-2 row-start-2 md:order-2 md:col-span-1 md:row-auto" />
+                    <span
+                      className={cn(
+                        "col-start-2 row-start-1 text-right font-mono text-sm md:order-3 md:col-auto md:row-auto md:text-[15px]",
+                        item.lift < 0 && "text-mother-text",
+                      )}
+                    >
+                      {formatSigned(item.lift * 100)}
+                      <span className="sr-only"> points vs items of the same cost</span>
                     </span>
                   </motion.div>
                 ))}

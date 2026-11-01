@@ -8,6 +8,7 @@ import {
   getBadgeDistribution,
   getHeroes,
   getPatchWindows,
+  getPlayerEnemyHeroes,
   getPlayerHeroRecords,
   getPlayerHistory,
   getPlayerMates,
@@ -47,10 +48,11 @@ async function PlayerContent({ params }: { params: PageProps<"/players/[id]">["p
   await connection();
 
   // The history drives most of the page; everything else is optional.
-  const [history, rank, heroRecords, mates, heroes, ranks, windows] = await Promise.all([
+  const [history, rank, heroRecords, enemyHeroes, mates, heroes, ranks, windows] = await Promise.all([
     settle(getPlayerHistory(accountId)),
     settle(getPlayerRank(accountId)),
     settle(getPlayerHeroRecords(accountId)),
+    settle(getPlayerEnemyHeroes(accountId)),
     settle(getPlayerMates(accountId)),
     settle(getHeroes()),
     settle(getRanks()),
@@ -86,6 +88,7 @@ async function PlayerContent({ params }: { params: PageProps<"/players/[id]">["p
     history: history.data,
     rank: badge,
     heroRecords: heroRecords.ok ? heroRecords.data : [],
+    enemyHeroes: enemyHeroes.ok ? enemyHeroes.data : [],
     mates: mates.ok ? mates.data : [],
     mateNames: nameMap,
     heroes: heroes.ok ? heroes.data : [],

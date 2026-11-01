@@ -136,6 +136,13 @@ export type ItemRow = {
   /** Shop art (null for the rare item without any). */
   imageUrl: string | null;
   winRate: number;
+  /**
+   * Win rate minus the average win rate of all items at the same tier (cost),
+   * weighted by purchases, 0–1 scale (0.021 = 2.1 points better). Raw win rate
+   * favours late, expensive items (teams that can afford them are usually
+   * ahead already); comparing within a tier shows which purchase actually helps.
+   */
+  lift: number;
   /** Share of player-games in which it was bought, 0–1. */
   buyShare: number;
 };
@@ -143,14 +150,39 @@ export type ItemRow = {
 export function buildItemRows(stats: ItemStat[], items: Item[], totals: GameTotals, perSlot = 6): Record<ItemSlot, ItemRow[]> {
   const byId = new Map(items.map((i) => [i.id, i]));
   const playerGames = totals.matches * HEROES_PER_MATCH;
-  const rows = stats.flatMap((s) => {
+  const kept = stats.flatMap((s) => {
     const item = byId.get(s.itemId);
     const buyShare = s.buys / playerGames;
     if (!item || buyShare < MIN_ITEM_BUY_SHARE) return [];
-    return [{ itemId: item.id, name: item.name, slot: item.slot, tier: item.tier, cost: item.cost, imageUrl: item.imageUrl, winRate: s.winRate, buyShare }];
+    return [{ item, stat: s, buyShare }];
   });
+
+  // Purchase-weighted average win rate per tier, across all slots.
+  const tierTotals = new Map<number, { wins: number; buys: number }>();
+  for (const { item, stat } of kept) {
+    const t = tierTotals.get(item.tier) ?? { wins: 0, buys: 0 };
+    t.wins += stat.wins;
+    t.buys += stat.buys;
+    tierTotals.set(item.tier, t);
+  }
+  const tierAverage = (tier: number) => {
+    const t = tierTotals.get(tier);
+    return t && t.buys > 0 ? t.wins / t.buys : 0.5;
+  };
+
+  const rows: ItemRow[] = kept.map(({ item, stat, buyShare }) => ({
+    itemId: item.id,
+    name: item.name,
+    slot: item.slot,
+    tier: item.tier,
+    cost: item.cost,
+    imageUrl: item.imageUrl,
+    winRate: stat.winRate,
+    lift: stat.winRate - tierAverage(item.tier),
+    buyShare,
+  }));
   const top = (slot: ItemSlot) =>
-    rows.filter((r) => r.slot === slot).sort((a, b) => b.winRate - a.winRate).slice(0, perSlot);
+    rows.filter((r) => r.slot === slot).sort((a, b) => b.lift - a.lift).slice(0, perSlot);
   return { weapon: top("weapon"), vitality: top("vitality"), spirit: top("spirit") };
 }
 

@@ -15,8 +15,15 @@ from mappers in `src/lib/deadlock/` (see the `deadlock-api` skill).
 - `role="img"` + `aria-label` stating the takeaway in one sentence, generated from the data.
 - Numbers in Geist Mono, `tabular-nums`. Axis labels mono 11 px in `faint`.
 - SVG charts use a fixed `viewBox` and `width: 100%; height: auto`. On phones,
-  increase stroke widths and label sizes inside the viewBox (see the mobile
-  designs) rather than shrinking the text to nothing.
+  increase stroke widths inside the viewBox (see the mobile designs). Label
+  sizes are set from the measured width (`charts/useViewBoxScale`) so labels
+  render at 11 px on screen at every width, never shrinking with the SVG.
+- Text on a data-driven fill must reach 4.5:1: pick ink or fg with
+  `bestText()` from `lib/contrast.ts`, and if neither passes, lighten the fill
+  (matchup grid) or put the label on a dark plate (damage share).
+- Focusable charts and lists show a visible 2 px brass `focus-visible` outline
+  (`outline-hidden focus-visible:outline-solid …`; plain `outline-none` cancels it
+  in Tailwind v4). A list of many rows is one tab stop with arrow-key movement.
 - Takes typed props only, no fetching inside chart components.
 
 ## SoulsLeadChart (match report)
@@ -59,8 +66,9 @@ from mappers in `src/lib/deadlock/` (see the `deadlock-api` skill).
 ## RankDistribution (meta)
 
 - Input: `{ tier: number; name: string; share: number }[]`.
-- Vertical bars, 4–5 px gaps; percentage above each bar in mono 10 px, 3-letter
-  rank abbreviations below. Bars `line-muted`, highlighted tiers (Oracle and above,
+- Vertical bars, 4–5 px gaps; percentage above each bar and 3-letter rank
+  abbreviations below, both mono 10 px (11 px on desktop). This overrides the
+  8/9 px in MetaMobile. Bars `line-muted`, highlighted tiers (Oracle and above,
   or the user's filter) in brass. May use the rank colours from the API instead —
   ask before switching.
 - Caption names the median tier.
@@ -70,6 +78,11 @@ from mappers in `src/lib/deadlock/` (see the `deadlock-api` skill).
 See `soul-ledger-design` § Components for exact styling. Widths come from data:
 - WinRateBar: `(wr − 40) / 20` clamped 0–1.
 - TickMeter: ticks filled while `44 + i × 0.5 ≤ wr`.
+- Items that win (meta) ranks items by **lift**: win rate minus the purchase-weighted
+  average win rate of all items at the same tier (cost). Raw win rate only lists
+  late 6,400-soul items. The row number is the lift (`+2.1`), the details line shows
+  cost, raw win rate and buy share, and the TickMeter takes `0.5 + lift` so its
+  ticks read −6 → +6 points.
 - TeamSplitBar: flex weights = each team's souls.
 
 ## Matchup grid (meta)
@@ -77,7 +90,9 @@ See `soul-ledger-design` § Components for exact styling. Widths come from data:
 - Input: 6 × 6 heroes; each cell = row hero's win rate vs column hero − 50.
 - Diagonal cells show "—" on `surface-2`.
 - Cell fill: brass if positive, `mother` if negative; opacity `0.15 + |v| / 4.5`
-  capped at 0.85. Text `ink` when `|v| > 2.6`, else `fg`.
+  capped at 0.85. Text is `ink` or `fg`, whichever contrasts more (`bestText`);
+  where neither reaches 4.5:1 (brass ≈ ±1.6–2.2, mother ≈ ±2.4–2.9) the fill is
+  eased lighter until `fg` passes.
 - Value text: `+2.1` / `−1.4` (use a real minus sign).
 - Only show pairs with enough matches (see `deadlock-api`); otherwise "n/a".
 
@@ -86,14 +101,16 @@ See `soul-ledger-design` § Components for exact styling. Widths come from data:
 - One stacked horizontal bar per team, segments sorted largest first, 2 px gaps.
 - Team colour shades from light to dark (king: `#F0912E #C97526 #A35F20 #7E4A1A #5C3614 #40260F`;
   mother: `#5E8BFF #4C72D4 #3D5CAB #2F4784 #22345F #182543`).
-- Desktop/tablet: labels inside segments ("Haze 22%"). Phone: no inside labels;
-  a 3-column legend underneath.
+- Desktop/tablet: labels inside segments ("Haze 22%"), ink or fg by contrast; the
+  mid shades that pass with neither get a dark `ink/70` plate. Phone: no inside
+  labels; a 3-column legend underneath.
 
 ## Build order (match)
 
 - A grid of purchases in time order: ItemChip (tier, slot colour) + item name + time.
-- Items later sold stay in the grid, dimmed, with "sold 19:20" after the buy time
-  (see `deadlock-api` § Build order).
+- Items later sold stay in the grid with "sold 19:20" after the buy time (see
+  `deadlock-api` § Build order). Only the ItemChip is dimmed (50%); the name turns
+  `muted` and stays ≥ 4.5:1.
 - Desktop auto-fills columns ≥ 150 px; tablet 3 columns; phone 2 columns.
 - A select chooses whose build to show (default: the MVP).
 

@@ -177,10 +177,10 @@ function AlliesRivals({ view, index }: { view: PlayerView; index: number }) {
           empty="No regular teammates yet"
         />
         <PairList
-          title="STRUGGLES ON"
-          rows={view.strugglesOn.map((h) => ({ key: String(h.heroId), ...h }))}
+          title="TOUGHEST HEROES"
+          rows={view.toughestHeroes.map((h) => ({ key: String(h.heroId), ...h }))}
           tone="text-mother-text"
-          empty="Not enough games per hero yet"
+          empty="Not enough games against any hero yet"
         />
       </div>
     </Card>

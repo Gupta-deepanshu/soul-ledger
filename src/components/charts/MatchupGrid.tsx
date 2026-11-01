@@ -4,13 +4,28 @@ import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import { formatSigned } from "@/lib/format";
 import type { MatchupCell, MatchupGrid as MatchupGridData } from "@/lib/deadlock/meta";
+import { bestText } from "@/lib/contrast";
 
+const BRASS = "#d9b26f";
+const MOTHER = "#5e8bff";
+
+/**
+ * Fill strength grows with |v| (15% → 85%), and the text is ink or fg, whichever
+ * reads better on the result. Some mid strengths reach 4.5:1 with neither
+ * (brass around ±1.6–2.2, blue around ±2.4–2.9), so those cells are eased
+ * lighter until fg text passes. Cells sit on the card's `surface`.
+ */
 function cellStyle(v: number): React.CSSProperties {
-  const alpha = Math.min(0.85, 0.15 + Math.abs(v) / 4.5);
-  const colour = v > 0 ? "var(--brass)" : "var(--mother)";
+  const hue = v > 0 ? BRASS : MOTHER;
+  let alpha = Math.min(0.85, 0.15 + Math.abs(v) / 4.5);
+  let text = bestText(hue, alpha);
+  while (text.ratio < 4.5 && alpha > 0.15) {
+    alpha -= 0.01;
+    text = bestText(hue, alpha);
+  }
   return {
-    background: `color-mix(in srgb, ${colour} ${Math.round(alpha * 100)}%, transparent)`,
-    color: Math.abs(v) > 2.6 ? "var(--ink)" : "var(--fg)",
+    background: `color-mix(in srgb, ${v > 0 ? "var(--brass)" : "var(--mother)"} ${Math.round(alpha * 100)}%, transparent)`,
+    color: `var(--${text.text})`,
   };
 }
 

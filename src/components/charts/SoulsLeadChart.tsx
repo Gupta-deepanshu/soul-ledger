@@ -7,6 +7,10 @@ import { formatCompact, formatDuration } from "@/lib/format";
 import { KING, MOTHER, TEAMS } from "@/lib/deadlock/teams";
 import type { LeadPoint, MatchEvent } from "@/lib/deadlock/match";
 import { useEventHighlight } from "@/components/match/EventHighlight";
+import { useViewBoxScale } from "./useViewBoxScale";
+
+/** On-screen size of every chart label, in CSS px, at any width. */
+const LABEL_PX = 11;
 
 // viewBox geometry (see the soul-ledger-charts skill).
 const W = 800;
@@ -50,6 +54,10 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
   const inView = useInView(ref, { once: true });
   const { active, setActive } = useEventHighlight();
   const [cursor, setCursor] = useState<number | null>(null);
+  // Labels are sized in viewBox units, so convert 11 px on screen into units
+  // once the chart's width is known (the classes below are the pre-measure fallback).
+  const k = useViewBoxScale(ref, W);
+  const labelStyle = k == null ? undefined : { fontSize: LABEL_PX * k };
 
   const scale = niceScale(Math.max(...lead.map((p) => Math.abs(p.lead)), 1));
   const x = (t: number) => X0 + (t / Math.max(durationS, 1)) * (X1 - X0);
@@ -114,9 +122,9 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
       onBlur={() => setCursor(null)}
       onPointerMove={(e) => setCursor(nearest(e.clientX))}
       onPointerLeave={() => setCursor(null)}
-      className="relative outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brass"
+      className="relative outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-brass"
     >
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label={describe(lead)}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full overflow-visible" role="img" aria-label={describe(lead)}>
         <defs>
           <clipPath id={`${uid}-above`}>
             <rect x="0" y="0" width={W} height={ZERO} />
@@ -134,7 +142,7 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
         <line x1={X0} y1={ZERO} x2={X1} y2={ZERO} stroke="var(--tick)" strokeWidth="1" />
 
         {/* Y labels: outside the plot on tablet/desktop, inside it (larger) on phones. */}
-        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block">
+        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block" style={labelStyle}>
           {grid.map((v) => (
             <text key={v} x={X0 - 8} y={y(v) + 4} textAnchor="end">
               {label(v)}
@@ -144,7 +152,7 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
             0
           </text>
         </g>
-        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden">
+        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden" style={labelStyle}>
           {[scale, -scale].map((v) => (
             <text key={v} x={X0 + 6} y={y(v) - 8}>
               {label(v)}
@@ -223,15 +231,15 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
           <line x1={x(point.timeS)} y1={14} x2={x(point.timeS)} y2={DIAMOND_Y} stroke="var(--brass)" strokeWidth="1" />
         )}
 
-        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block">
-          {axis(70).map((l) => (
+        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block" style={labelStyle}>
+          {axis(k == null ? 70 : 70 * k).map((l) => (
             <text key={`${l.x}-${l.text}`} x={l.x} y={300} textAnchor="middle">
               {l.text}
             </text>
           ))}
         </g>
-        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden">
-          {axis(150).map((l, i, all) => (
+        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden" style={labelStyle}>
+          {axis(k == null ? 150 : 64 * k).map((l, i, all) => (
             <text key={`${l.x}-${l.text}`} x={l.x} y={308} textAnchor={i === 0 ? "start" : i === all.length - 1 ? "end" : "middle"}>
               {l.text.split(" · ")[0]}
             </text>

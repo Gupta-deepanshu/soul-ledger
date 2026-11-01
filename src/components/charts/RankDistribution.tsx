@@ -32,7 +32,7 @@ export function RankDistribution({ shares, highlightTier }: RankDistributionProp
       <div className="flex h-[130px] items-end gap-[3px] border-b border-line-strong md:h-[170px] md:gap-1 xl:h-[150px] xl:gap-[5px]">
         {shares.map((s, i) => (
           <div key={s.tier} className="flex h-full flex-1 flex-col items-center justify-end gap-[3px] md:gap-1">
-            <span className="font-mono text-[9px] text-muted-foreground xl:text-[10px]">{shareLabel(s.share)}</span>
+            <span className="font-mono text-[10px] text-muted-foreground xl:text-[11px]">{shareLabel(s.share)}</span>
             <motion.div
               className={cn("w-full origin-bottom", s.tier >= highlightTier ? "bg-brass" : "bg-line-muted")}
               style={{ height: `${(s.share / max) * 80}%` }}
@@ -45,7 +45,7 @@ export function RankDistribution({ shares, highlightTier }: RankDistributionProp
       </div>
       <div aria-hidden="true" className="flex gap-[3px] md:gap-1 xl:gap-[5px]">
         {shares.map((s) => (
-          <span key={s.tier} className="flex-1 text-center font-mono text-[8px] text-muted-foreground md:text-[9px] xl:text-[10px]">
+          <span key={s.tier} className="flex-1 text-center font-mono text-[10px] text-muted-foreground xl:text-[11px]">
             {s.short}
           </span>
         ))}

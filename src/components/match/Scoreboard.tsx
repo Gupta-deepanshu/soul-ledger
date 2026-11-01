@@ -29,8 +29,18 @@ function TeamTable({ team, rows }: { team: TeamId; rows: ScoreRow[] }) {
   const t = TEAMS[team];
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[13px] xl:min-w-[720px] xl:text-sm">
+      {/* Fixed column widths so both teams' tables line up column for column. */}
+      <table className="w-full table-fixed border-collapse text-[13px] xl:min-w-[720px] xl:text-sm">
         <caption className={cn("pb-2 text-left font-mono text-xs uppercase tracking-[0.08em]", t.textClass)}>{t.name}</caption>
+        <colgroup>
+          <col className="w-[34%]" />
+          <col className="w-[16%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+        </colgroup>
         <thead>
           <tr className="text-right font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground xl:text-[11px]">
             <th scope="col" className="py-2 text-left font-normal">Hero · player</th>
