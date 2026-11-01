@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soul Ledger — Player profile (mobile)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0F0D0B}
+a{color:#EFE6D4;text-decoration:none}a:hover{color:#FFFFFF}
+.grain{background-image:radial-gradient(rgba(239,230,212,0.05) 1px,transparent 1px);background-size:3px 3px}
+.halftone{background-image:radial-gradient(circle,rgba(217,178,111,0.5) 1.2px,transparent 1.5px);background-size:6px 6px;-webkit-mask-image:radial-gradient(ellipse at 80% 40%,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse at 80% 40%,#000 10%,transparent 70%)}
+</style>
+</helmet>
+<div class="grain" style="width: 390px; height: 3300px; box-sizing: border-box; background-color: #0F0D0B; color: #EFE6D4; font-family: 'Geist', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 3px double #3A3227">
+<a href="MetaMobile.dc.html" style="display: flex; align-items: baseline; gap: 6px"><span style="font-family: 'Instrument Serif', serif; font-style: italic; font-size: 24px; line-height: 1; color: {{accent}}">Soul</span><span style="font-family: 'Instrument Serif', serif; font-size: 24px; line-height: 1">Ledger</span></a>
+<button type="button" aria-label="Search players" style="width: 44px; height: 44px; border: 1px solid #3A3227; background: #17140F; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#EFE6D4" stroke-width="1.5"></circle><path d="M12.2 12.2L16 16" stroke="#EFE6D4" stroke-width="1.5" stroke-linecap="round"></path></svg></button>
+</div>
+
+<div style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 16px; padding: 0 16px 24px">
+
+<section style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: 22px 0 20px; border-bottom: 1px solid #2C261E; overflow: hidden">
+<div class="halftone" aria-hidden="true" style="position: absolute; top: 0; right: -10px; width: 240px; height: 100%"></div>
+<div style="position: relative; display: flex; align-items: center; gap: 14px">
+<div aria-hidden="true" style="width: 72px; height: 72px; border: 1px solid #4A4032; background: #17140F; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 34px; color: {{accent}}">nj</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 46px; line-height: 0.9">nightjar</h1>
+<div style="display: flex; align-items: center; gap: 8px"><svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 2 L24 13 L13 24 L2 13 Z" fill="none" stroke="{{accent}}" stroke-width="1.6"></path><path d="M13 7 L19 13 L13 19 L7 13 Z" fill="{{accent}}"></path></svg><span style="font-size: 14px">Archon <span style="font-family: 'Instrument Serif', serif; font-size: 17px">III</span></span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9C9180">top 22%</span></div>
+</div>
+</div>
+<div style="position: relative; font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #9C9180">Asia · since Oct 2024 · last match 2 h ago · <span style="border: 1px dashed #4A4032; padding: 2px 5px">sample</span></div>
+<div style="position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button type="button" style="height: 44px; border: 1px solid #3A3227; background: #17140F; color: #EFE6D4; font: 500 14px 'Geist', sans-serif">Compare</button>
+<button type="button" style="height: 44px; border: 0; background: {{accent}}; color: #0F0D0B; font: 500 14px 'Geist', sans-serif">Refresh</button>
+</div>
+</section>
+
+<section aria-label="Career totals" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: #2C261E; border: 1px solid #2C261E">
+<sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px; background: #0F0D0B">
+<span style="font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #9C9180">{{k.label}}</span>
+<span style="font-family: 'Instrument Serif', serif; font-size: 34px; line-height: 1">{{k.value}}</span>
+<span style="font-size: 12px; color: #9C9180">{{k.note}}</span>
+</div>
+</sc-for>
+</section>
+
+<section style="border: 1px solid #2C261E; background: #17140F; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: {{accent}}">I.</span><h2 style="margin: 0; font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; line-height: 1">The climb</h2><span style="font-size: 12px; color: #9C9180">Last 60 ranked matches</span></div>
+<svg viewBox="0 0 800 230" style="width: 100%; height: auto" role="img" aria-label="Rank climb from Ritualist to Archon III over the last 60 matches.">
+<rect x="40" y="0" width="740" height="50" fill="#1F1B15"></rect><rect x="40" y="100" width="740" height="50" fill="#1F1B15"></rect>
+<g fill="#9C9180" font-family="Geist Mono, monospace" font-size="28"><text x="52" y="36">ORACLE</text><text x="52" y="86">ARCHON</text><text x="52" y="136">EMISSARY</text><text x="52" y="186">RITUALIST</text></g>
+<path d="M40,170 H101.7 V160 H163.3 V150 H225 V140 H286.7 V145 H348.3 V125 H410 V110 H471.7 V115 H533.3 V95 H595 V80 H656.7 V85 H718.3 V70 H780" fill="none" stroke="{{accent}}" stroke-width="6"></path>
+<circle cx="770" cy="70" r="12" fill="{{accent}}"></circle>
+</svg>
+</section>
+
+<section style="border: 1px solid #2C261E; background: #17140F; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: flex-end"><div style="display: flex; flex-direction: column; gap: 3px"><span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: {{accent}}">II.</span><h2 style="margin: 0; font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; line-height: 1">Last 20</h2><span style="font-size: 12px; color: #9C9180">Height = KDA</span></div><span style="font-family: 'Instrument Serif', serif; font-size: 30px; line-height: 1">13<span style="color: #9C9180">–</span>7</span></div>
+<div style="display: flex; flex-direction: column">
+<div style="display: flex; align-items: flex-end; gap: 3px; height: 70px"><sc-for list="{{form}}" as="f" hint-placeholder-count="20"><div style="flex: 1 1 0; height: {{f.up}}; background: {{accent}}"></div></sc-for></div>
+<div style="height: 1px; background: #6B604F"></div>
+<div style="display: flex; align-items: flex-start; gap: 3px; height: 38px"><sc-for list="{{form}}" as="f" hint-placeholder-count="20"><div style="flex: 1 1 0; height: {{f.down}}; background: #5E8BFF"></div></sc-for></div>
+</div>
+<div style="display: flex; gap: 14px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #9C9180"><span style="display: flex; align-items: center; gap: 5px"><span style="width: 10px; height: 10px; background: {{accent}}"></span>Win</span><span style="display: flex; align-items: center; gap: 5px"><span style="width: 10px; height: 10px; background: #5E8BFF"></span>Loss</span></div>
+</section>
+
+<section style="border: 1px solid #2C261E; background: #17140F; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; flex-direction: column; gap: 3px; padding-bottom: 4px"><span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: {{accent}}">III.</span><h2 style="margin: 0; font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; line-height: 1">Match history</h2></div>
+<sc-for list="{{history}}" as="m" hint-placeholder-count="8">
+<a href="MatchMobile.dc.html" style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 52px; padding: 6px 0; border-top: 1px solid #231E18">
+<span aria-hidden="true" style="width: 32px; height: 32px; border: 1px solid #4A4032; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 15px; color: {{accent}}; background: #1F1B15">{{m.mono}}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 14px">{{m.hero}} <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: {{m.rc}}">· {{m.result}}</span></span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9C9180">{{m.kda}} · {{m.souls}} · {{m.len}}</span></span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-family: 'Geist Mono', monospace"><span style="font-size: 13px; color: {{m.rc}}">{{m.delta}}</span><span style="font-size: 11px; color: #9C9180">{{m.when}}</span></span>
+</a>
+</sc-for>
+</section>
+
+<section style="border: 1px solid #2C261E; background: #17140F; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: {{accent}}">IV.</span><h2 style="margin: 0; font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; line-height: 1">Hero pool</h2></div>
+<sc-for list="{{pool}}" as="p" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #231E18">
+<div style="display: flex; justify-content: space-between; font-size: 14px"><span>{{p.hero}} <span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9C9180">{{p.m}} matches</span></span><span style="font-family: 'Geist Mono', monospace">{{p.wr}}</span></div>
+<div style="height: 6px; background: #231E18; position: relative"><div style="position: absolute; left: 50%; top: -3px; width: 1px; height: 12px; background: #6B604F"></div><div style="height: 6px; width: {{p.w}}; background: {{p.bg}}"></div></div>
+</div>
+</sc-for>
+</section>
+
+<section style="border: 1px solid #2C261E; background: #17140F; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: {{accent}}">V.</span><h2 style="margin: 0; font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; line-height: 1">Allies &amp; rivals</h2></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="display: flex; flex-direction: column"><span style="font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #9C9180; padding-bottom: 6px">BEST WITH</span><sc-for list="{{mates}}" as="x" hint-placeholder-count="3"><div style="display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid #231E18; font-size: 13px"><span>{{x.n}}</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: {{accent}}">{{x.v}}</span></div></sc-for></div>
+<div style="display: flex; flex-direction: column"><span style="font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #9C9180; padding-bottom: 6px">TOUGHEST</span><sc-for list="{{rivals}}" as="x" hint-placeholder-count="3"><div style="display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid #231E18; font-size: 13px"><span>{{x.n}}</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #8FA9FF">{{x.v}}</span></div></sc-for></div>
+</div>
+</section>
+
+<footer style="display: flex; flex-direction: column; gap: 6px; padding-top: 14px; border-top: 3px double #3A3227; font-family: 'Geist Mono', monospace; font-size: 11px; line-height: 1.5; color: #8A7F6E">
+<span>Fan project. Not affiliated with or endorsed by Valve. Data via deadlock-api.com.</span>
+<span>Fictional player, sample data</span>
+</footer>
+</div>
+
+<nav aria-label="Primary" style="display: flex; border-top: 1px solid #2C261E; background: #0C0A08; padding: 6px 8px 18px">
+<a href="MetaMobile.dc.html" style="flex: 1 1 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: #9C9180"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 16V9M8 16V4M12 16V7M16 16V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>Meta</a>
+<a href="Mobile.dc.html" style="flex: 1 1 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: #9C9180"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="3" fill="currentColor"></circle><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"></circle></svg>Live</a>
+<a href="PlayerMobile.dc.html" style="flex: 1 1 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: {{accent}}"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"></circle><path d="M4 16c1.2-3 3.4-4.5 6-4.5s4.8 1.5 6 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>Players</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D9B26F","options":["#D9B26F","#E58B3A","#EFE6D4","#8FA9FF"]},"$preview":{"width":390,"height":3300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#D9B26F';
+    const kpis = [
+      { label: 'Ranked', value: '412', note: 'matches' },
+      { label: 'Win rate', value: '54.1%', note: '223 W · 189 L' },
+      { label: 'KDA', value: '3.2', note: '7.9 / 5.1 / 8.4' },
+      { label: 'Souls / min', value: '1,246', note: '+62 vs rank' }
+    ];
+    const res = [['W',3.4],['L',1.2],['W',5.0],['W',2.2],['L',0.8],['W',4.1],['W',2.9],['L',1.6],['W',6.3],['L',2.0],['W',3.3],['W',2.7],['L',0.9],['W',4.8],['L',1.4],['W',3.0],['W',2.5],['L',1.1],['W',5.6],['W',3.9]];
+    const form = res.map(([r, k]) => ({ up: r === 'W' ? Math.round(k / 6.3 * 70) + 'px' : '0px', down: r === 'L' ? Math.round(k / 2.2 * 38) + 'px' : '0px' }));
+    const mono = (n) => n.split(/[ &]+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2);
+    const history = [
+      ['Warden', 'Win', '11/5/14', '36.1k', '34:12', '+21', '2 h'], ['Warden', 'Win', '8/4/11', '31.7k', '29:48', '+19', '3 h'],
+      ['Seven', 'Loss', '5/8/6', '24.2k', '38:05', '−17', '1 d'], ['Warden', 'Win', '14/6/9', '39.0k', '33:21', '+20', '1 d'],
+      ['Haze', 'Loss', '6/7/3', '27.5k', '27:40', '−18', '2 d'], ['Infernus', 'Win', '9/3/12', '30.8k', '31:16', '+22', '2 d'],
+      ['Warden', 'Win', '7/5/15', '29.9k', '35:02', '+18', '3 d'], ['Seven', 'Loss', '4/9/8', '22.1k', '36:44', '−20', '3 d']
+    ].map(([hero, result, kda, souls, len, delta, when]) => ({ hero, mono: mono(hero), result, kda, souls, len, delta, when, rc: result === 'Win' ? accent : '#8FA9FF' }));
+    const pool = [['Warden', 168, 58.3], ['Seven', 74, 51.4], ['Infernus', 61, 55.7], ['Haze', 49, 46.9], ['Abrams', 32, 53.1]]
+      .map(([hero, m, wr]) => ({ hero, m, wr: wr.toFixed(1) + '%', w: Math.round((wr - 40) / 20 * 100) + '%', bg: wr >= 50 ? accent : '#5E8BFF' }));
+    const mates = [{ n: 'velvetcrow', v: '64% · 39 games' }, { n: 'ashgrove', v: '61% · 28 games' }, { n: 'saltmarsh', v: '57% · 21 games' }];
+    const rivals = [{ n: 'Vindicta', v: '41% · 34 games' }, { n: 'Lash', v: '43% · 28 games' }, { n: 'Pocket', v: '45% · 31 games' }];
+    return { accent, kpis, form, history, pool, mates, rivals };
+  }
+}
+</script>
+</body>
+</html>

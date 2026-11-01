@@ -1,26 +1,205 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
+/*
+ * Soul Ledger tokens (see .claude/skills/soul-ledger-design).
+ * The design's "muted" text colour is exposed as `muted-foreground`, because
+ * shadcn already uses `muted` for a background (surface-2).
+ */
 @theme inline {
+  --color-ink: var(--ink);
+  --color-rail: var(--rail);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-rule: var(--rule);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-muted: var(--line-muted);
+  --color-tick: var(--tick);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-faint: var(--faint);
+  --color-brass: var(--brass);
+  --color-king: var(--king);
+  --color-mother: var(--mother);
+  --color-mother-text: var(--mother-text);
+  --color-weapon: var(--weapon);
+  --color-weapon-bg: var(--weapon-bg);
+  --color-weapon-text: var(--weapon-text);
+  --color-vitality: var(--vitality);
+  --color-vitality-bg: var(--vitality-bg);
+  --color-spirit: var(--spirit);
+  --color-spirit-bg: var(--spirit-bg);
+  --color-meter-low: var(--meter-low);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-heading: var(--font-instrument-serif), Georgia, serif;
+
+  --ease-ledger: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+  --radius-field: 4px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Dark only: the same values in :root and .dark. */
+:root,
+.dark {
+  --ink: #0f0d0b;
+  --rail: #0c0a08;
+  --surface: #17140f;
+  --surface-2: #1f1b15;
+  --rule: #231e18;
+  --line: #2c261e;
+  --line-strong: #3a3227;
+  --line-muted: #4a4032;
+  --tick: #6b604f;
+  --fg: #efe6d4;
+  --fg-2: #cfc4ae;
+  --faint: #8a7f6e;
+  --brass: #d9b26f;
+  --king: #f0912e;
+  --mother: #5e8bff;
+  --mother-text: #8fa9ff;
+  --weapon: #e58b3a;
+  --weapon-bg: #2a1c10;
+  --weapon-text: #f2b27a;
+  --vitality: #7dbf6a;
+  --vitality-bg: #18241a;
+  --spirit: #a986f2;
+  --spirit-bg: #1f1a2c;
+  /* TickMeter ticks below 50%. */
+  --meter-low: #7a5634;
+
+  --background: var(--ink);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--fg);
+  --primary: var(--brass);
+  --primary-foreground: var(--ink);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--fg);
+  --muted: var(--surface-2);
+  --muted-foreground: #9c9180;
+  --accent: var(--surface-2);
+  --accent-foreground: var(--fg);
+  --destructive: var(--mother-text);
+  --border: var(--line-strong);
+  --input: var(--line-strong);
+  --ring: var(--brass);
+  --radius: 0rem;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-ink text-fg;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  /* Only inputs and selects are rounded; everything else is square. */
+  input,
+  select,
+  textarea {
+    border-radius: var(--radius-field);
+  }
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Page-background grain. */
+@utility grain {
+  background-image: radial-gradient(rgba(239, 230, 212, 0.05) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+/* Halftone behind page heroes. Decorative: always aria-hidden. */
+@utility halftone {
+  background-image: radial-gradient(circle, rgba(217, 178, 111, 0.55) 1.3px, transparent 1.6px);
+  background-size: 7px 7px;
+  mask-image: linear-gradient(100deg, transparent 5%, #000 60%, transparent 100%);
+}
+
+/* Phone variant (MetaMobile): finer dots, diagonal fade. */
+@utility halftone-phone {
+  background-image: radial-gradient(circle, rgba(217, 178, 111, 0.5) 1.2px, transparent 1.5px);
+  background-size: 6px 6px;
+  mask-image: linear-gradient(160deg, transparent 30%, #000 80%);
+}
+
+@utility halftone-radial {
+  background-image: radial-gradient(circle, rgba(217, 178, 111, 0.5) 1.3px, transparent 1.6px);
+  background-size: 7px 7px;
+  mask-image: radial-gradient(ellipse at 70% 50%, #000 10%, transparent 70%);
+}
+
+
+/* Hero background (Shape Waves) fades: the same shapes as the halftone masks. */
+@utility hero-mask {
+  mask-image: linear-gradient(100deg, transparent 5%, #000 60%, transparent 100%);
+}
+@utility hero-mask-phone {
+  mask-image: linear-gradient(160deg, transparent 30%, #000 80%);
+}
+@utility hero-mask-radial {
+  mask-image: radial-gradient(ellipse at 70% 50%, #000 10%, transparent 70%);
+}
+
+/*
+ * InkTitle: before the script starts, the real <h1> letters wait hidden ("pending")
+ * so they don't flash and then vanish. While drawing, InkTitle hides them inline.
+ * Never with reduced motion; <noscript> in the layout shows them without JS, and
+ * the 4 s failsafe shows them if the script never starts.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-ink-state="pending"] [data-ink-part] {
+    opacity: 0;
+    animation: ink-failsafe 0s linear 4s forwards;
+  }
+}
+@keyframes ink-failsafe {
+  to {
+    opacity: 1;
+  }
 }
