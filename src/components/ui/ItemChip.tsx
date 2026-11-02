@@ -44,7 +44,8 @@ export function ItemChip({ slot, tier, imageUrl, name, className }: ItemChipProp
         title={`${style.label} · tier ${tierNumeral(tier)}`}
         className={cn("relative block size-9 shrink-0 overflow-hidden border md:size-10", style.fill, className)}
       >
-        <Image src={imageUrl} alt={label} fill sizes="40px" className="object-cover" />
+        {/* Already a small WebP from the API (~20 KB): served as is, not through Vercel image optimisation. */}
+        <Image src={imageUrl} alt={label} fill sizes="40px" unoptimized className="object-cover" />
       </span>
     );
   }

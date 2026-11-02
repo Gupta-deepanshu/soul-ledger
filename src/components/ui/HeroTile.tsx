@@ -24,6 +24,7 @@ function initials(name: string) {
     .slice(0, 2);
 }
 
+// The API's hero icons are already ~10 KB WebPs: served as is (`unoptimized`) to save Vercel's free image transformations.
 /** Square hero portrait from the API; serif initials in brass if the image is missing or fails. */
 export function HeroTile({ name, iconUrl, size, labelled = false, borderClass = "border-line-muted", className }: HeroTileProps) {
   const [failed, setFailed] = useState(false);
@@ -43,6 +44,7 @@ export function HeroTile({ name, iconUrl, size, labelled = false, borderClass = 
           alt={labelled ? name : ""}
           fill
           sizes="48px"
+          unoptimized
           className="object-cover"
           onError={() => setFailed(true)}
         />
