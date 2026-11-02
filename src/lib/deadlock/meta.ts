@@ -116,10 +116,10 @@ export function buildHeroRows(
 }
 
 /** `winRate` is this patch (0–1); `delta` the change in points since last patch. */
-export type Mover = { heroId: number; name: string; delta: number; winRate: number };
+export type Mover = { heroId: number; name: string; /** Small hero portrait (null if the API has none). */ iconUrl: string | null; delta: number; winRate: number };
 
 export function buildMovers(rows: HeroRow[], count = 3): { rising: Mover[]; falling: Mover[] } {
-  const changed = rows.flatMap((r) => (r.delta == null ? [] : [{ heroId: r.heroId, name: r.name, delta: r.delta, winRate: r.winRate }]));
+  const changed = rows.flatMap((r) => (r.delta == null ? [] : [{ heroId: r.heroId, name: r.name, iconUrl: r.iconUrl, delta: r.delta, winRate: r.winRate }]));
   return {
     rising: changed.filter((m) => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, count),
     falling: changed.filter((m) => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, count),

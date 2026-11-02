@@ -227,7 +227,7 @@ export async function RankDistributionSection({ minTier, index }: SectionProps) 
   const highlightName = ranks.find((r) => r.tier === highlightTier)?.name ?? "";
 
   return (
-    <Card index={index} aria-labelledby="ranks-title" className="xl:flex-1">
+    <Card index={index} aria-labelledby="ranks-title">
       <SectionHeader
         numeral="III."
         title="Where players rank"

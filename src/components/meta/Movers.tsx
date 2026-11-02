@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { formatPercent, formatSigned } from "@/lib/format";
 import { ChartTooltip, Muted } from "@/components/charts/ChartTooltip";
+import { HeroTile } from "@/components/ui/HeroTile";
 import type { Mover } from "@/lib/deadlock/meta";
 
 function MoverList({ title, movers, up }: { title: string; movers: Mover[]; up: boolean }) {
@@ -34,11 +35,14 @@ function MoverList({ title, movers, up }: { title: string; movers: Mover[]; up: 
               onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(m.heroId)}
               onPointerLeave={() => setHovered(null)}
               className={cn(
-                "relative flex justify-between gap-2 border-t border-rule py-2 text-[13px] transition-colors md:text-sm xl:py-2.5",
+                "relative flex items-center justify-between gap-2 border-t border-rule py-2 text-[13px] transition-colors md:text-sm xl:py-2.5",
                 hovered === m.heroId && "bg-surface-2",
               )}
             >
-              <span className="truncate">{m.name}</span>
+              <span className="flex min-w-0 items-center gap-2 md:gap-2.5">
+                <HeroTile name={m.name} iconUrl={m.iconUrl} size={22} className="md:[--tile:24px]" />
+                <span className="truncate">{m.name}</span>
+              </span>
               <span className={up ? "font-mono text-brass" : "font-mono text-mother-text"}>
                 {formatSigned(m.delta)}
                 <span className="sr-only">
@@ -63,10 +67,10 @@ function MoverList({ title, movers, up }: { title: string; movers: Mover[]; up: 
   );
 }
 
-/** Rising and falling heroes. Side by side on desktop and phone, stacked on tablet (per the designs). */
+/** Rising then falling heroes, stacked at every width so full names fit beside the portraits. */
 export function Movers({ rising, falling }: { rising: Mover[]; falling: Mover[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3.5 md:grid-cols-1 md:gap-1.5 xl:grid-cols-2 xl:gap-5">
+    <div className="grid grid-cols-1 gap-1.5">
       <MoverList title="RISING" movers={rising} up />
       <MoverList title="FALLING" movers={falling} up={false} />
     </div>
