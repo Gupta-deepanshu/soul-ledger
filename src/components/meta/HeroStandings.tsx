@@ -7,6 +7,8 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroTile } from "@/components/ui/HeroTile";
 import { WinRateBar } from "@/components/ui/WinRateBar";
 import { Delta } from "@/components/ui/Delta";
+import { highlightHandlers, useRowHighlight } from "@/components/ui/RowHighlight";
+import { cn } from "@/lib/utils";
 import { BracketButton, FOCUS_RING } from "@/components/ui/buttons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCompact, formatInt, formatKda, formatPercent } from "@/lib/format";
@@ -23,6 +25,8 @@ type HeroStandingsProps = {
 
 export function HeroStandings({ rows, minMatches, index }: HeroStandingsProps) {
   const [showAll, setShowAll] = useState(false);
+  // Hovering a row highlights the hero in "Who beats whom" (when it is one of the six there), and the reverse.
+  const { active, setActive } = useRowHighlight();
   const visible = showAll ? rows : rows.slice(0, TOP);
   const canExpand = rows.length > TOP;
   const scope = showAll ? `All ${rows.length} heroes by win rate` : `Top ${Math.min(TOP, rows.length)} by win rate`;
@@ -93,7 +97,8 @@ export function HeroStandings({ rows, minMatches, index }: HeroStandingsProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="border-t border-rule text-right font-mono text-fg-2"
+                  {...highlightHandlers(setActive, row.heroId)}
+                  className={cn("border-t border-rule text-right font-mono text-fg-2 transition-colors hover:bg-surface-2", active === row.heroId && "bg-surface-2")}
                 >
                   <td className="hidden py-3 text-left text-muted-foreground xl:table-cell">
                     {String(row.position).padStart(2, "0")}

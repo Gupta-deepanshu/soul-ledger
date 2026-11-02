@@ -26,6 +26,60 @@ from mappers in `src/lib/deadlock/` (see the `deadlock-api` skill).
   in Tailwind v4). A list of many rows is one tab stop with arrow-key movement.
 - Takes typed props only, no fetching inside chart components.
 
+## Hover and tooltips
+
+Every chart shows the detail behind a mark, using `charts/ChartTooltip.tsx`.
+Only show what isn't already printed next to the mark (WinRateBar, TickMeter
+and TeamSplitBar have their numbers beside them, so they get no tooltip).
+
+- **Tablet and desktop (≥ 768 px): `ChartTooltip`.** Shown on mouse hover and on
+  keyboard focus; `hidden md:flex`, `aria-hidden`. It sits above the chart (or
+  the hovered cell or bar), leaning left or right near the edges (`x` < 25 or
+  > 75). Same look everywhere: `ink` fill, `line-strong` border, mono 11 px; the
+  first line names the thing in `fg`, the second gives the value (team or
+  result colour), the third is `Muted` context (date, games, change).
+- **Phone (< 768 px): no floating tooltips. `ChartReadout`** is a one-line
+  detail strip directly under the chart (`md:hidden`, `aria-live="polite"`).
+  It shows the most recent item by default (or the most telling one where there
+  is no order: the biggest matchup edge, the most common rank, the top damage
+  dealer) and changes when a mark is tapped. The selected mark gets a 2 px
+  brass outline (bars, cells) or ring (points), on phone only. Long text is cut
+  with an ellipsis; a link goes in `action` so it never wraps.
+- **Pointer handling.** Hover state comes from `pointerType === "mouse"` only,
+  so a tap never leaves a hover stuck on; taps select via `isPhoneViewport()`
+  at click time.
+- **Keyboard.** The chart is one tab stop (`tabIndex={0}`, `role="group"`, an
+  aria-label that ends "Use the arrow keys…"). Left/Right step through points
+  or bars (Up/Down too in the grid), Escape clears. A `sr-only` `aria-live`
+  line reads the current item, so the tooltip itself stays `aria-hidden`.
+- **Links.** Last 20 bars are real `<Link>`s to `/matches/[id]` with an
+  aria-label like "Match 12: Warden, win, KDA 3.4, 2 days ago". Desktop: hover
+  or focus shows the tooltip, click or Enter opens the match. Phone: the first
+  tap selects; "Open match →" in the readout opens it. The climb's readout has
+  the same link.
+- **Linked highlights.** When a list and a chart show the same things, hovering
+  one highlights the other through `ui/RowHighlight.tsx` (keys: match id,
+  account id, hero id): match history ↔ Last 20, scoreboard ↔ damage share,
+  hero standings ↔ the matchup grid's labels. Objective rows ↔ souls-lead
+  diamonds use the older `EventHighlight`. Mouse only; without a provider
+  nothing happens, so the charts still work alone.
+- Relative dates in labels and tooltips come from `useRelativeTime()` (plain
+  date on the server, "2 days ago" after hydration).
+
+What each chart shows:
+
+| Chart | Tooltip / readout |
+|---|---|
+| Last 20 | Hero, Win/Loss, K/D/A and KDA, souls, length, when |
+| Climb | Rank, change from the match before, hero, result, when |
+| Matchup grid (Meta, live draft) | "Haze wins 53.1% of 28,382 games vs Viscous"; crosshair on the row and column |
+| Rank distribution | Tier, share, ≈ players, "top X% with this rank or higher" |
+| Damage share | Player, hero, exact damage and % of team, K/D/A, souls |
+| Souls lead (match) | Time, lead, "Archmother gained 759 since 9:00" |
+| Lead sparkline (live) | Time, lead, change since the previous update |
+| Movers (list) | Last patch → this patch win rate |
+| Live card hero tiles | Hero name (CSS `group-hover`, tablet/desktop) |
+
 ## SoulsLeadChart (match report)
 
 - Input: `{ timeS: number; lead: number }[]` where `lead = kingNetWorth − motherNetWorth`

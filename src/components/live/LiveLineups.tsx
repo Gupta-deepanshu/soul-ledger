@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
 import { HeroTile } from "@/components/ui/HeroTile";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { formatInt, formatPercent } from "@/lib/format";
@@ -91,7 +92,7 @@ export function LiveLineups({ lineups, index }: { lineups: Promise<Settled<LiveL
           <Team data={result.data} team={MOTHER} />
         </div>
       ) : (
-        <SectionError failure={result.failure} />
+        <SectionError failure={result.failure} retryKey="lineups" />
       )}
     </Card>
   );
@@ -100,13 +101,13 @@ export function LiveLineups({ lineups, index }: { lineups: Promise<Settled<LiveL
 export function LiveLineupsSkeleton() {
   return (
     <div aria-busy="true" className="grid gap-5 border border-line bg-surface p-4 md:grid-cols-2 md:gap-6 md:p-[22px] xl:px-[26px] xl:py-6">
-      <span className="sr-only">Loading lineups…</span>
+      <SectionHeader numeral="I." title="Lineups" caption={<LedgerLoader messages={LOADER_MESSAGES.live} />} className="md:col-span-2" />
       {[0, 1].map((team) => (
         <div key={team} className="flex flex-col">
           {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="flex items-center gap-3 border-t border-rule py-2.5">
-              <span className="size-8 shrink-0 bg-surface-2" />
-              <span className="h-2.5 flex-1 bg-surface-2" />
+              <span className="ink-wash size-8 shrink-0" />
+              <span className="ink-wash h-2.5 flex-1" />
             </div>
           ))}
         </div>

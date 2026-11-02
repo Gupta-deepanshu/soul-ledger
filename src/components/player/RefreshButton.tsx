@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CooldownTicks, StampButton } from "@/components/ui/buttons";
+import { BracketButton, CooldownTicks } from "@/components/ui/buttons";
 import { refreshPlayer } from "@/app/players/[id]/actions";
 
 /** Matches the server's one-refresh-per-player-per-minute limit in `refreshPlayer`. */
@@ -42,16 +42,23 @@ export function RefreshButton({ accountId, className }: { accountId: number; cla
   }
 
   return (
-    <div className={cn("flex flex-col items-stretch gap-1.5 md:items-end", className)}>
+    // Tablet/desktop: the status line hangs below the button (absolute) so an
+    // empty one doesn't push the button out of line with the player's name.
+    <div className={cn("flex flex-col items-stretch gap-1.5 md:relative md:items-end", className)}>
       <div className="flex flex-col gap-1.5">
-        <StampButton onClick={onClick} loading={pending} disabled={until != null}>
+        {/* Same outlined style as the site's other buttons; the surface fill keeps it
+            readable over the hero's wave background. */}
+        <BracketButton onClick={onClick} loading={pending} disabled={until != null} className="bg-surface">
           <RotateCw size={16} strokeWidth={1.5} aria-hidden="true" />
           <span className="md:hidden">Refresh</span>
           <span className="hidden md:inline">Refresh matches</span>
-        </StampButton>
+        </BracketButton>
         {until != null && <CooldownTicks until={until} durationS={COOLDOWN_S} />}
       </div>
-      <p role="status" className="min-h-4 font-mono text-[11px] text-muted-foreground">
+      <p
+        role="status"
+        className="min-h-4 font-mono text-[11px] text-muted-foreground md:absolute md:top-full md:right-0 md:mt-1.5 md:whitespace-nowrap"
+      >
         {pending ? "Refreshing…" : message}
       </p>
     </div>

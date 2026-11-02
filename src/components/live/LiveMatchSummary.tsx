@@ -78,7 +78,7 @@ export function LiveMatchSummary({ matchId, initial, lineups, draft }: LiveMatch
         <div className="relative flex items-start justify-between gap-3">
           <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-fg-2 md:text-[11px] xl:text-xs">
             {!ended && <LiveDot />}
-            Match {matchId} · {ended ? "ended" : "in progress · refreshed every 30 seconds"}
+            Match {matchId} · {ended ? "ended" : "in progress · updates about every 2 minutes"}
           </p>
           <CopyButton text={String(matchId)} label="Copy match ID" look="icon" className="-mt-2.5 md:hidden" />
         </div>
@@ -119,7 +119,7 @@ export function LiveMatchSummary({ matchId, initial, lineups, draft }: LiveMatch
           </Card>
         </div>
 
-        <LiveLog match={ended ? null : match} fetchedAt={snapshot.fetchedAt} index={4} />
+        <LiveLog match={ended ? null : match} fetchedAt={snapshot.fetchedAt} dataAt={snapshot.dataAt} index={4} />
       </div>
     </NowProvider>
   );

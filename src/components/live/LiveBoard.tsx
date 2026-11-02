@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { FilterSelect } from "@/components/ui/FilterSelect";
 import { SampleBadge } from "@/components/ui/SampleBadge";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
 import { BracketButton, Segmented } from "@/components/ui/buttons";
 import { formatInt } from "@/lib/format";
 import {
@@ -125,7 +126,7 @@ export function LiveBoard({ initial, sample }: { initial: LiveBoardData | null; 
       {!data ? (
         error ? (
           <div className="mt-3.5 border border-line bg-surface p-4 md:mt-5 md:p-[22px] xl:mt-8">
-            <SectionError failure={error.failure} onRetry={() => void mutate()} />
+            <SectionError failure={error.failure} onRetry={() => void mutate()} retryKey="board" />
           </div>
         ) : (
           <LiveSkeleton />
@@ -200,15 +201,15 @@ export function LiveBoard({ initial, sample }: { initial: LiveBoardData | null; 
   );
 }
 
-/** Static placeholder in the board's shape (no looping animation). */
+/** Placeholder in the board's shape: the ledger loader (after 600 ms) above ink-wash blocks. */
 export function LiveSkeleton() {
   return (
     <div aria-busy="true" className="mt-3.5 flex flex-col gap-5 md:mt-5 xl:mt-8">
-      <span className="sr-only">Loading live matches…</span>
-      <div className="h-[220px] border border-line-strong bg-surface md:h-[360px] xl:h-[330px]" />
+      <LedgerLoader messages={LOADER_MESSAGES.live} size="hero" />
+      <div className="ink-wash h-[220px] border border-line-strong md:h-[360px] xl:h-[330px]" />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-5">
         {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="h-16 border border-line bg-surface md:h-[150px]" />
+          <div key={i} className="ink-wash h-16 border border-line md:h-[150px]" />
         ))}
       </div>
     </div>

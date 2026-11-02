@@ -15,7 +15,9 @@ function Tiles({ match, team, heroes }: Props & { team: TeamId }) {
   return (
     <ul aria-label={`${t.name} heroes`} className="flex gap-0.5 xl:gap-[3px]">
       {match.heroes[team].map((id) => (
-        <li key={id}>
+        // The tiles have no names beside them: hovering one shows its hero's name
+        // (the image's alt text already gives it to screen readers).
+        <li key={id} className="group/tile relative">
           <HeroTile
             name={heroes[id]?.name ?? `Hero ${id}`}
             iconUrl={heroes[id]?.iconUrl ?? null}
@@ -24,6 +26,12 @@ function Tiles({ match, team, heroes }: Props & { team: TeamId }) {
             borderClass={t.borderClass}
             className="xl:[--tile:24px]"
           />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 hidden -translate-x-1/2 border border-line-strong bg-ink px-2 py-1 font-mono text-[11px] whitespace-nowrap text-fg md:group-hover/tile:block"
+          >
+            {heroes[id]?.name ?? `Hero ${id}`}
+          </span>
         </li>
       ))}
     </ul>

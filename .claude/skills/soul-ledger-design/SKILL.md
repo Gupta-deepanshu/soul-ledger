@@ -133,8 +133,8 @@ type falls back to a colour-only hover.
 
 | Type | Look | Hover / press | Use for |
 |---|---|---|---|
-| `StampButton` | `brass` fill, `ink` text | `brass-deep` wipes in from the left; press 0.97 | The one primary action per view: Search, Refresh matches |
-| `BracketButton` | 1 px `line-strong` outline, `fg` text | Four brass corner brackets slide in; press `surface-2` | Secondary actions: Show more, Show all heroes, Try again, Load the report, recent-search chips |
+| `StampButton` | `brass` fill, `ink` text | `brass-deep` wipes in from the left; press 0.97 | The one primary action per view: Search |
+| `BracketButton` | 1 px `line-strong` outline, `fg` text | Four brass corner brackets slide in; press `surface-2` | Secondary actions: Show more, Show all heroes, Try again, Refresh matches (with a `bg-surface` fill over the hero waves), recent-search chips |
 | `IconButton` | 44 px square outline on `surface` | Icon nudges 2 px; desktop magnet pull ≤ 4 px | Icon-only actions (needs `aria-label`): the tablet/phone search button |
 | `ArrowLink` | `brass` text + trailing → (added for you) | Arrow slides 3 px right | Navigation in text: patch notes, Open latest match, Player profile. Inline in a line of text: `-my-3` keeps the line height |
 | `Segmented` | Row of `aria-pressed` toggles | Colour only; highlight slides via shared `layoutId` | Filters that aren't tabs: Live rank chips |
@@ -142,7 +142,7 @@ type falls back to a colour-only hover.
 - `SegmentIndicator` is the sliding highlight on its own, for Radix Tabs and nav
   links (which keep their own semantics): `underline` (top nav), `fill` (rank
   chips), `border` with the slot colours (Weapon/Vitality/Spirit tabs).
-- `CooldownTicks` sits under a disabled `StampButton` while a rate limit runs
+- `CooldownTicks` sits under a disabled button while a rate limit runs
   (player Refresh: 60 s, 25 ticks emptying right → left).
 - Don't write "→" in an `ArrowLink` label, and don't put `Loading…`/`Retrying…`
   text in a label: pass `loading`.
@@ -202,13 +202,52 @@ the only GSAP use on the site)
 - Only two things loop: the **hero background (Shape Waves only)** and the **live dot**.
   Everything else is one-shot. The hero background pauses when the hero is off screen
   or the tab is hidden, and shows a still frame with reduced motion; its CSS halftone
-  fallback is static and only fades in when it mounts.
+  fallback is static and only fades in when it mounts. Loading indicators (ink wash,
+  LedgerLoader, LoadingDots) are the exception: they loop only while something is
+  loading and are gone once it arrives (§ 7).
 - Entrance animations run once per page visit, not on every tab switch.
 - Wrap the app in `<MotionConfig reducedMotion="user">`; with reduced motion, show final values and fully drawn charts instantly.
 - Animate only `transform`, `opacity` and SVG `pathLength` (the hero background draws on its own canvas, and InkTitle animates SVG stroke dashes and a clip rect through GSAP; both are exempt).
 - No smooth-scroll libraries, parallax or scroll-jacking.
 
-## 7. Accessibility checklist
+## 7. Loading
+
+Every page and card that waits for data shows a skeleton in its final shape,
+plus the ledger loader if the wait is noticeable.
+
+- **Ink skeletons.** Placeholder blocks use the `ink-wash` utility (globals.css):
+  `surface-2` with a faint brass wash sweeping left → right every 1.6 s on our easing,
+  like ink soaking in. Keep the real layout's shapes (rows, tiles, grid cells, cards)
+  so nothing jumps when data arrives. No grey pulse, no spinners. Reduced motion: plain
+  `surface-2`, no wash.
+- **LedgerLoader** (`components/ui/LedgerLoader.tsx`, adapted from Kokonut UI's AI Text
+  Loading; Kokonut's gradient-ring Loader is not used): brass Instrument Serif italic,
+  letters rising in (opacity + transform only, no blur), cycling every 1.8 s through
+  short messages. Messages are a prop; the sets live in `LOADER_MESSAGES`
+  (default: "Reading the ledger…", "Counting souls…", "Tallying the Patron's dead…",
+  "Checking the lanes…"; Live: "Watching the lanes…"; plus meta, match, player, search).
+  - Where: in the page hero when the whole page is loading (`size="hero"`: match report,
+    player profile, live board), or in the card header caption when only that card is
+    loading (Meta cards, live lineups and draft, player search results).
+  - When: only after 600 ms (the space is reserved, so fast loads don't flash it or
+    shift anything); it disappears with the skeleton as soon as data arrives.
+  - Reduced motion: the first message as still text.
+  - The delay and the cycling are CSS (`ledger-loader`, `ledger-letter` in globals.css),
+    not JS timers: most loaders sit in streamed Suspense fallbacks, which are plain
+    HTML that React doesn't hydrate until the data arrives. Keep it that way.
+- **API busy (503 + Retry-After).** `SectionError` shows the loader with "The ledger is
+  busy, trying again in Xs" and a 25-tick countdown (TickMeter style, colour only),
+  then retries by itself: `router.refresh()` for server sections, or the `onRetry`
+  given (SWR revalidate). After 3 failed retries it shows the normal error with a Try
+  again button. Pass a `retryKey` so several failing sections on one page count apart.
+- **Accessibility.** The loading region has `aria-busy="true"`. LedgerLoader holds a
+  polite `role="status"` that announces "Loading" once per page load (several card
+  loaders mounting together announce once); the animated words are `aria-hidden`.
+  The announcement needs hydration, so it happens in client-rendered loading states
+  (live board, live lineups/draft, search results, the busy countdown); in streamed
+  server fallbacks the region is `aria-busy` only.
+
+## 8. Accessibility checklist
 
 - Contrast ≥ 4.5:1 for text (the tokens above pass on `ink` and `surface`; don't add lighter greys).
 - Touch targets ≥ 44 px.

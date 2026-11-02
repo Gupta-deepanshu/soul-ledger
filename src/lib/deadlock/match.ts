@@ -44,7 +44,7 @@ export type ScoreRow = {
 
 export type TeamSummary = { team: TeamId; souls: number; kills: number; objectives: number; won: boolean };
 
-export type BuildItem = { itemId: number; name: string; slot: ItemSlot; tier: number; boughtAtS: number; soldAtS: number | null };
+export type BuildItem = { itemId: number; name: string; slot: ItemSlot; tier: number; /** Shop art; null when the item has none. */ imageUrl: string | null; boughtAtS: number; soldAtS: number | null };
 export type PlayerBuild = { accountId: number; label: string; items: BuildItem[] };
 
 export type MatchView = {
@@ -217,7 +217,7 @@ export function buildMatchView(
       items: player.purchases.flatMap((pur) => {
         const item = itemById.get(pur.itemId);
         return item
-          ? [{ itemId: item.id, name: item.name, slot: item.slot, tier: item.tier, boughtAtS: pur.boughtAtS, soldAtS: pur.soldAtS }]
+          ? [{ itemId: item.id, name: item.name, slot: item.slot, tier: item.tier, imageUrl: item.imageUrl, boughtAtS: pur.boughtAtS, soldAtS: pur.soldAtS }]
           : [];
       }),
     };

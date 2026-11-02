@@ -23,6 +23,7 @@ export async function GET(request: Request) {
     const id = Number(matchParam);
     const snapshot: LiveMatchSnapshot = {
       fetchedAt: board.fetchedAt,
+      dataAt: board.dataAt,
       match: board.matches.find((m) => m.id === id) ?? null,
       heroes: board.heroes,
     };

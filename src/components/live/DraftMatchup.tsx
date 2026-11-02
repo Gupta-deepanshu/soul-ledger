@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
 import { MatchupGrid } from "@/components/charts/MatchupGrid";
 import { formatPercent } from "@/lib/format";
 import { KING, MOTHER, TEAMS, type TeamId } from "@/lib/deadlock/teams";
@@ -50,11 +51,11 @@ function MetaRates({ draft, team }: { draft: LiveDraft; team: TeamId }) {
 export function DraftMatchupSkeleton() {
   return (
     <div aria-busy="true" className="flex min-w-0 flex-col gap-2.5 border border-line bg-surface p-4 md:gap-3.5 md:p-[22px] xl:px-[26px] xl:py-6">
-      <SectionHeader numeral="II." title="Draft matchup" caption={<span className="sr-only">Loading…</span>} />
+      <SectionHeader numeral="II." title="Draft matchup" caption={<LedgerLoader messages={LOADER_MESSAGES.live} />} />
       {/* The grid's shape, with room for the row labels on the left. */}
       <div className="grid grid-cols-6 gap-0.5 pl-16 md:gap-[3px] md:pl-24">
         {Array.from({ length: 36 }, (_, i) => (
-          <span key={i} className="h-10 bg-surface-2 md:h-11" />
+          <span key={i} className="ink-wash h-10 md:h-11" />
         ))}
       </div>
     </div>
@@ -102,7 +103,7 @@ export function DraftMatchup({ draft, index }: { draft: Promise<Settled<LiveDraf
           </div>
         </>
       ) : (
-        <SectionError failure={result.failure} />
+        <SectionError failure={result.failure} retryKey="draft" />
       )}
     </Card>
   );

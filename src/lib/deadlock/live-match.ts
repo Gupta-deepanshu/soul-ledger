@@ -153,8 +153,10 @@ export function buildLiveDraft(
     edge = { leader: points === 0 ? null : mean > 0 ? 0 : 1, points };
   }
 
+  const games = king.map((row) => mother.map((col) => pairs.get(`${row.heroId}:${col.heroId}`)?.matches ?? 0));
+
   return {
-    grid: { heroes: king.map(matchupHero), cols: mother.map(matchupHero), cells },
+    grid: { heroes: king.map(matchupHero), cols: mother.map(matchupHero), cells, games },
     heroes: { 0: king, 1: mother },
     edge,
     pairs: values.length,

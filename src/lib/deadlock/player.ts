@@ -26,8 +26,31 @@ export type PlayerTotals = {
   tierSoulsPerMin: number | null;
 };
 
-export type ClimbPoint = { step: number; tier: number; subrank: number };
-export type FormPoint = { matchId: number; won: boolean; kda: number };
+/** One ranked match on the climb: the badge after it, plus what the hover shows. */
+export type ClimbPoint = {
+  step: number;
+  tier: number;
+  subrank: number;
+  matchId: number;
+  heroName: string;
+  won: boolean;
+  /** Unix seconds. */
+  startTime: number;
+};
+/** One of the last 20 matches: bar height from `kda`, the rest for the hover and link. */
+export type FormPoint = {
+  matchId: number;
+  won: boolean;
+  kda: number;
+  heroName: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  souls: number;
+  durationS: number;
+  /** Unix seconds. */
+  startTime: number;
+};
 export type HistoryRow = {
   matchId: number;
   heroId: number;
@@ -153,12 +176,31 @@ export function buildPlayerView(input: Inputs): PlayerView {
     .filter((m) => m.badge)
     .slice(0, CLIMB_MATCHES)
     .reverse()
-    .map((m) => ({ step: m.badge!.tier * 6 + (m.badge!.subrank - 1), tier: m.badge!.tier, subrank: m.badge!.subrank }));
+    .map((m) => ({
+      step: m.badge!.tier * 6 + (m.badge!.subrank - 1),
+      tier: m.badge!.tier,
+      subrank: m.badge!.subrank,
+      matchId: m.matchId,
+      heroName: heroName(m.heroId),
+      won: m.won,
+      startTime: m.startTime,
+    }));
 
   const form = normal
     .slice(0, FORM_MATCHES)
     .reverse()
-    .map((m) => ({ matchId: m.matchId, won: m.won, kda: kdaOf(m.kills, m.deaths, m.assists) }));
+    .map((m) => ({
+      matchId: m.matchId,
+      won: m.won,
+      kda: kdaOf(m.kills, m.deaths, m.assists),
+      heroName: heroName(m.heroId),
+      kills: m.kills,
+      deaths: m.deaths,
+      assists: m.assists,
+      souls: m.souls,
+      durationS: m.durationS,
+      startTime: m.startTime,
+    }));
 
   const records = input.heroRecords.filter((r) => r.matches > 0);
   const pool = [...records]

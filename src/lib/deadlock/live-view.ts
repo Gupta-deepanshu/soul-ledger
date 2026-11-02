@@ -24,6 +24,11 @@ export type LiveHero = { name: string; iconUrl: string | null };
 export type LiveBoardData = {
   /** Server time of this snapshot, unix seconds. */
   fetchedAt: number;
+  /**
+   * When the data source produced these numbers, unix seconds. The API refreshes
+   * the live list about every 2 minutes, so this can trail `fetchedAt` by minutes.
+   */
+  dataAt: number;
   /** Normal-mode matches only (Street Brawl is excluded). */
   matches: LiveMatchView[];
   heroes: Record<number, LiveHero>;
@@ -33,6 +38,8 @@ export type LiveBoardData = {
 /** Response of /api/live?match=<id>. */
 export type LiveMatchSnapshot = {
   fetchedAt: number;
+  /** See LiveBoardData.dataAt. */
+  dataAt: number;
   match: LiveMatchView | null;
   heroes: Record<number, LiveHero>;
 };

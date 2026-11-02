@@ -62,7 +62,7 @@ function toView(match: ActiveMatch, avg: MatchAverageRank, ranks: Rank[]): LiveM
 
 export async function getLiveBoard(): Promise<LiveBoardData> {
   const [active, heroes, ranks] = await Promise.all([getActiveMatches(), getHeroes(), getRanks()]);
-  const normal = active.filter((m) => m.normalMode);
+  const normal = active.matches.filter((m) => m.normalMode);
   const averages = await Promise.all(normal.map(averageRank));
 
   const heroMap: Record<number, LiveHero> = {};
@@ -70,6 +70,7 @@ export async function getLiveBoard(): Promise<LiveBoardData> {
 
   return {
     fetchedAt: Math.floor(Date.now() / 1000),
+    dataAt: active.dataAt,
     matches: normal.map((m, i) => toView(m, averages[i], ranks)),
     heroes: heroMap,
     rankOptions: rankFilterOptions(ranks),
@@ -80,7 +81,7 @@ export async function getLiveBoard(): Promise<LiveBoardData> {
 
 /** The raw active match (with account ids), from the same 30 s cache as the board. */
 export async function getActiveMatch(matchId: number): Promise<ActiveMatch | null> {
-  return (await getActiveMatches()).find((m) => m.id === matchId) ?? null;
+  return (await getActiveMatches()).matches.find((m) => m.id === matchId) ?? null;
 }
 
 /**

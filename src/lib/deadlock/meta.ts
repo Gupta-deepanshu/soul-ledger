@@ -115,10 +115,11 @@ export function buildHeroRows(
     });
 }
 
-export type Mover = { heroId: number; name: string; delta: number };
+/** `winRate` is this patch (0–1); `delta` the change in points since last patch. */
+export type Mover = { heroId: number; name: string; delta: number; winRate: number };
 
 export function buildMovers(rows: HeroRow[], count = 3): { rising: Mover[]; falling: Mover[] } {
-  const changed = rows.flatMap((r) => (r.delta == null ? [] : [{ heroId: r.heroId, name: r.name, delta: r.delta }]));
+  const changed = rows.flatMap((r) => (r.delta == null ? [] : [{ heroId: r.heroId, name: r.name, delta: r.delta, winRate: r.winRate }]));
   return {
     rising: changed.filter((m) => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, count),
     falling: changed.filter((m) => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, count),
@@ -191,8 +192,12 @@ export function buildItemRows(stats: ItemStat[], items: Item[], totals: GameTota
 export type MatchupHero = { heroId: number; name: string; shortName: string };
 /** Row hero's win rate vs column hero minus 50, in points; null on the diagonal; "n/a" below the sample minimum. */
 export type MatchupCell = number | null | "n/a";
-/** `heroes` are the rows; columns are `cols` when given (two lineups), else the same heroes (Meta). */
-export type MatchupGrid = { heroes: MatchupHero[]; cols?: MatchupHero[]; cells: MatchupCell[][] };
+/**
+ * `heroes` are the rows; columns are `cols` when given (two lineups), else the
+ * same heroes (Meta). `games[r][c]` is how many matches the pair played (0 when
+ * the API has none), for the hover.
+ */
+export type MatchupGrid = { heroes: MatchupHero[]; cols?: MatchupHero[]; cells: MatchupCell[][]; games: number[][] };
 
 /** "Lady Geist" → "Geist", for narrow column headers. */
 export function shortHeroName(name: string): string {
@@ -215,12 +220,22 @@ export function buildMatchupGrid(rows: HeroRow[], stats: MatchupStat[], size = 6
       return (pair.wins / pair.matches - 0.5) * 100;
     }),
   );
-  return { heroes, cells };
+  const games = heroes.map((row) => heroes.map((col) => pairs.get(`${row.heroId}:${col.heroId}`)?.matches ?? 0));
+  return { heroes, cells, games };
 }
 
 // ---- Rank distribution ----------------------------------------------------
 
-export type RankShare = { tier: number; name: string; short: string; share: number };
+export type RankShare = {
+  tier: number;
+  name: string;
+  short: string;
+  share: number;
+  /** Ranked players in this tier (latest ranked match in the window). */
+  players: number;
+  /** Share of ranked players in this tier or higher, 0–1. */
+  atOrAbove: number;
+};
 
 /** Share of ranked players per tier, Initiate (1) and up. Obscurus (0, unranked) is left out. */
 export function buildRankShares(population: RankPopulation[], ranks: Rank[]): { shares: RankShare[]; median: string | null } {
@@ -228,11 +243,14 @@ export function buildRankShares(population: RankPopulation[], ranks: Rank[]): { 
   const tiers = ranks.filter((r) => r.tier >= 1);
   const total = tiers.reduce((sum, r) => sum + (counts.get(r.tier) ?? 0), 0);
   if (total === 0) return { shares: [], median: null };
+  const players = (tier: number) => counts.get(tier) ?? 0;
   const shares = tiers.map((r) => ({
     tier: r.tier,
     name: r.name,
     short: r.name.slice(0, 3).toUpperCase(),
-    share: (counts.get(r.tier) ?? 0) / total,
+    share: players(r.tier) / total,
+    players: players(r.tier),
+    atOrAbove: tiers.filter((t) => t.tier >= r.tier).reduce((sum, t) => sum + players(t.tier), 0) / total,
   }));
   let cumulative = 0;
   const median = shares.find((s) => (cumulative += s.share) >= 0.5)?.name ?? null;

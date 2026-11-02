@@ -29,7 +29,10 @@ export type LiveLog = {
 };
 
 export type LogSnapshot = {
+  /** When we polled (identifies the poll). */
   fetchedAt: number;
+  /** When the data source produced the numbers (from the API's Age header); points are timed by this. */
+  dataAt: number;
   startTime: number | null;
   souls: Record<TeamId, number>;
   masks: Record<TeamId, number>;
@@ -43,8 +46,10 @@ export function startLog(snap: LogSnapshot | null): LiveLog {
 }
 
 /**
- * Adds one poll. The upstream data refreshes every 30 s, so a poll can repeat
- * the previous snapshot (same souls and objectives); those are skipped.
+ * Adds one poll. We poll every 30 s but the API refreshes the live list only
+ * about every 2 minutes, so most polls repeat the previous snapshot (same souls
+ * and objectives); those are skipped. Points are placed at the time the data
+ * was produced, not when we polled, so stale responses don't shift the chart.
  */
 export function addSnapshot(log: LiveLog, snap: LogSnapshot): LiveLog {
   const same =
@@ -56,7 +61,7 @@ export function addSnapshot(log: LiveLog, snap: LogSnapshot): LiveLog {
     log.masks[1] === snap.masks[1];
   if (same || snap.startTime == null) return { ...log, fetchedAt: snap.fetchedAt };
 
-  const t = Math.max(0, snap.fetchedAt - snap.startTime);
+  const t = Math.max(0, snap.dataAt - snap.startTime);
   const previous = log.points.at(-1);
   if (previous && t <= previous.t) return { ...log, fetchedAt: snap.fetchedAt };
 

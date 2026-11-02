@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeroTile } from "@/components/ui/HeroTile";
 import { ArrowLink, FOCUS_RING } from "@/components/ui/buttons";
+import { highlightHandlers, useRowHighlight } from "@/components/ui/RowHighlight";
 import { formatCompact, formatInt } from "@/lib/format";
 import { KING, MOTHER, TEAMS, type TeamId } from "@/lib/deadlock/teams";
 import type { ScoreRow } from "@/lib/deadlock/match";
@@ -27,6 +28,8 @@ function PlayerName({ row, className }: { row: ScoreRow; className?: string }) {
 const kda = (r: ScoreRow) => `${r.kills} / ${r.deaths} / ${r.assists}`;
 
 function TeamTable({ team, rows }: { team: TeamId; rows: ScoreRow[] }) {
+  // Hovering a row highlights the player in "Who did the damage", and the reverse.
+  const { active, setActive } = useRowHighlight();
   const t = TEAMS[team];
   return (
     <div className="overflow-x-auto">
@@ -55,7 +58,11 @@ function TeamTable({ team, rows }: { team: TeamId; rows: ScoreRow[] }) {
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.accountId} className="border-t border-rule text-right font-mono text-fg-2">
+            <tr
+              key={r.accountId}
+              {...highlightHandlers(setActive, r.accountId)}
+              className={cn("border-t border-rule text-right font-mono text-fg-2 transition-colors", active === r.accountId && "bg-surface-2")}
+            >
               <th scope="row" className="py-[9px] text-left font-normal xl:py-2.5">
                 <div className="flex items-center gap-2 xl:gap-2.5">
                   <HeroTile name={r.heroName} iconUrl={r.heroIcon} size={28} borderClass={t.borderClass} className="xl:[--tile:30px]" />

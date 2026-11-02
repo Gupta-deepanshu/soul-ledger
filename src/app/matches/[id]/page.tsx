@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { LiveMatchSummary } from "@/components/live/LiveMatchSummary";
 import { MatchReportView } from "@/components/match/MatchReportView";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
 import { getHeroes, getItems, getMatchReport, getPlayerNames, getRanks } from "@/lib/deadlock/api";
 import { isSampleData, type ApiFailure } from "@/lib/deadlock/client";
 import { getActiveMatch, getLiveBoard, getLiveDraft, getLiveLineups } from "@/lib/deadlock/live";
@@ -44,7 +45,7 @@ async function MatchContent({ params }: { params: PageProps<"/matches/[id]">["pa
     return (
       <LiveMatchSummary
         matchId={matchId}
-        initial={{ fetchedAt: board.data.fetchedAt, match: live, heroes: board.data.heroes }}
+        initial={{ fetchedAt: board.data.fetchedAt, dataAt: board.data.dataAt, match: live, heroes: board.data.heroes }}
         lineups={lineups}
         draft={draft}
       />
@@ -102,12 +103,15 @@ function MatchError({ id, failure }: { id: number; failure: ApiFailure | null })
 function MatchSkeleton() {
   return (
     <div aria-busy="true" className="flex flex-col gap-5 pt-6">
-      <span className="sr-only">Loading match…</span>
-      <div className="h-40 border-b border-line" />
-      <div className="h-[300px] border border-line bg-surface" />
+      {/* Hero: the ledger loader where the title will be. */}
+      <div className="flex h-40 flex-col justify-end gap-3 border-b border-line pb-6">
+        <span className="ink-wash block h-3 w-44" />
+        <LedgerLoader messages={LOADER_MESSAGES.match} size="hero" />
+      </div>
+      <div className="ink-wash h-[300px] border border-line" />
       <div className="grid gap-5 xl:grid-cols-[1fr_2fr]">
-        <div className="h-[420px] border border-line bg-surface" />
-        <div className="h-[420px] border border-line bg-surface" />
+        <div className="ink-wash h-[420px] border border-line" />
+        <div className="ink-wash h-[420px] border border-line" />
       </div>
     </div>
   );

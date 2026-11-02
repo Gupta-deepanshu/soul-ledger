@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
 import { BracketButton, FOCUS_RING, StampButton } from "@/components/ui/buttons";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
@@ -238,16 +239,22 @@ function Results({
         numeral="I."
         title="Results"
         id="results-title"
-        caption={result && !failure ? `${count} ${count === 1 ? "player" : "players"} for “${result.query}”` : undefined}
+        caption={
+          result && !failure ? (
+            `${count} ${count === 1 ? "player" : "players"} for “${result.query}”`
+          ) : !failure ? (
+            <LedgerLoader messages={LOADER_MESSAGES.search} />
+          ) : undefined
+        }
       />
       {failure ? (
-        <SectionError failure={failure} onRetry={onRetry} />
+        <SectionError failure={failure} onRetry={onRetry} retryKey="search" />
       ) : !result ? (
         <ul aria-busy="true">
           {Array.from({ length: 3 }, (_, i) => (
             <li key={i} className="flex items-center gap-3 border-t border-rule py-3">
-              <span className="size-10 bg-surface-2" />
-              <span className="h-3 w-40 bg-surface-2" />
+              <span className="ink-wash size-10" />
+              <span className="ink-wash h-3 w-40" />
             </li>
           ))}
         </ul>

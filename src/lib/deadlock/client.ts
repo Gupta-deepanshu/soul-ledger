@@ -69,9 +69,23 @@ type FetchOptions = {
 export async function deadlockFetch<S extends z.ZodType>(
   pathname: string,
   schema: S,
-  { query = {}, fixture }: FetchOptions = {},
+  options: FetchOptions = {},
 ): Promise<z.output<S>> {
-  const json = isSampleData() ? await readFixture(pathname, fixture) : await fetchLive(pathname, query);
+  return (await deadlockFetchTimed(pathname, schema, options)).data;
+}
+
+/**
+ * Like deadlockFetch, plus when the response's data was produced (unix seconds):
+ * now minus the `Age` header. The API caches responses (e.g. active matches for
+ * up to ~4 min with stale-while-revalidate), so this can be well before "now".
+ */
+export async function deadlockFetchTimed<S extends z.ZodType>(
+  pathname: string,
+  schema: S,
+  { query = {}, fixture }: FetchOptions = {},
+): Promise<{ data: z.output<S>; producedAt: number }> {
+  const now = Math.floor(Date.now() / 1000);
+  const { json, ageS } = isSampleData() ? { json: await readFixture(pathname, fixture), ageS: 0 } : await fetchLive(pathname, query);
   const result = schema.safeParse(json);
   if (!result.success) {
     throw new DeadlockApiError(
@@ -79,10 +93,10 @@ export async function deadlockFetch<S extends z.ZodType>(
       `${pathname} did not match its schema:\n${z.prettifyError(result.error)}`,
     );
   }
-  return result.data;
+  return { data: result.data, producedAt: now - ageS };
 }
 
-async function fetchLive(pathname: string, query: Query): Promise<unknown> {
+async function fetchLive(pathname: string, query: Query): Promise<{ json: unknown; ageS: number }> {
   const url = new URL(pathname, BASE_URL);
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined) url.searchParams.set(key, String(value));
@@ -112,7 +126,9 @@ async function fetchLive(pathname: string, query: Query): Promise<unknown> {
             : "http";
     throw new DeadlockApiError({ kind, status: res.status, retryAfter }, `${pathname} responded ${res.status}`);
   }
-  return res.json();
+  // Seconds the response sat in the API's cache; missing on a fresh response.
+  const ageS = Math.max(0, Number(res.headers.get("age")) || 0);
+  return { json: await res.json(), ageS };
 }
 
 // Endpoint → fixture file in src/data/fixtures (saved by scripts/save-fixtures.mjs).

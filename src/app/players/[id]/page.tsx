@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { PlayerProfileView } from "@/components/player/PlayerProfileView";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
 import {
   getBadgeDistribution,
   getHeroes,
@@ -65,7 +66,7 @@ async function PlayerContent({ params }: { params: PageProps<"/players/[id]">["p
         <h1 className="font-serif text-[44px] leading-[0.95] tracking-[-0.02em] md:text-[60px]">
           Player <span className="italic text-brass">profile.</span>
         </h1>
-        <SectionError failure={history.failure} />
+        <SectionError failure={history.failure} retryKey="history" />
       </section>
     );
   }
@@ -102,16 +103,19 @@ async function PlayerContent({ params }: { params: PageProps<"/players/[id]">["p
 function PlayerSkeleton() {
   return (
     <div aria-busy="true" className="flex flex-col gap-5 pt-6">
-      <span className="sr-only">Loading player…</span>
       <div className="flex items-end gap-6 border-b border-line pb-8">
-        <div className="size-[72px] border border-line-muted bg-surface md:size-[100px] xl:size-[120px]" />
-        <div className="h-16 w-64 bg-surface" />
+        <div className="ink-wash size-[72px] shrink-0 border border-line-muted md:size-[100px] xl:size-[120px]" />
+        {/* Hero: the ledger loader where the player's name will be. */}
+        <div className="flex min-w-0 flex-col gap-3">
+          <span className="ink-wash block h-3 w-44" />
+          <LedgerLoader messages={LOADER_MESSAGES.player} size="hero" />
+        </div>
       </div>
       <div className="grid gap-5 md:grid-cols-2">
-        <div className="h-[280px] border border-line bg-surface" />
-        <div className="h-[280px] border border-line bg-surface" />
+        <div className="ink-wash h-[280px] border border-line" />
+        <div className="ink-wash h-[280px] border border-line" />
       </div>
-      <div className="h-[420px] border border-line bg-surface" />
+      <div className="ink-wash h-[420px] border border-line" />
     </div>
   );
 }

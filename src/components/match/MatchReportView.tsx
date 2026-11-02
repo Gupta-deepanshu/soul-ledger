@@ -12,6 +12,7 @@ import { KING, MOTHER, TEAMS, type TeamId } from "@/lib/deadlock/teams";
 import type { MatchView } from "@/lib/deadlock/match";
 import { BuildOrder } from "./BuildOrder";
 import { EventHighlightProvider } from "./EventHighlight";
+import { RowHighlightProvider } from "@/components/ui/RowHighlight";
 import { ObjectiveList } from "./ObjectiveList";
 import { Scoreboard } from "./Scoreboard";
 import { InkTitle } from "@/components/ui/InkTitle";
@@ -103,68 +104,71 @@ export function MatchReportView({ view, sample }: { view: MatchView; sample: boo
   );
 
   return (
-    <div className="flex flex-col">
-      <MatchHero view={view} sample={sample} />
+    // Links the scoreboard and damage share: hover a player in one to highlight them in the other.
+    <RowHighlightProvider>
+      <div className="flex flex-col">
+        <MatchHero view={view} sample={sample} />
 
-      <EventHighlightProvider>
-        <div className="mt-4 md:mt-5 xl:mt-8">
-          <Card index={0} aria-labelledby="lead-title">
+        <EventHighlightProvider>
+          <div className="mt-4 md:mt-5 xl:mt-8">
+            <Card index={0} aria-labelledby="lead-title">
+              <SectionHeader
+                numeral="I."
+                title="The souls lead"
+                id="lead-title"
+                caption={
+                  <>
+                    Team souls difference at each stats snapshot (every 3–5 min)
+                    <span className="hidden md:inline"> · above the line = {TEAMS[KING].shortName} ahead</span>
+                  </>
+                }
+                action={<div className="hidden xl:block">{legend}</div>}
+              />
+              <div className="xl:hidden">{legend}</div>
+              {view.lead.length === 0 ? (
+                <p className="py-2 text-sm text-muted-foreground">No souls snapshots were recorded for this match.</p>
+              ) : (
+                <SoulsLeadChart lead={view.lead} events={view.events} durationS={view.durationS} />
+              )}
+            </Card>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:mt-5 md:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <Card index={1} aria-labelledby="objectives-title">
+              <SectionHeader
+                numeral="II."
+                title="Objectives"
+                id="objectives-title"
+                caption={<span className="hidden xl:inline">In the order they fell</span>}
+              />
+              <ObjectiveList events={view.events} />
+            </Card>
+            <Card index={2} aria-labelledby="scoreboard-title">
+              <SectionHeader
+                numeral="III."
+                title="Scoreboard"
+                id="scoreboard-title"
+                caption={<span className="md:hidden">Tap a player for full stats</span>}
+              />
+              <Scoreboard scoreboard={view.scoreboard} />
+            </Card>
+          </div>
+        </EventHighlightProvider>
+
+        <div className="mt-4 grid gap-4 md:mt-5 md:gap-5 xl:grid-cols-2">
+          <Card index={3} aria-labelledby="damage-title">
             <SectionHeader
-              numeral="I."
-              title="The souls lead"
-              id="lead-title"
-              caption={
-                <>
-                  Team souls difference at each stats snapshot (every 3–5 min)
-                  <span className="hidden md:inline"> · above the line = {TEAMS[KING].shortName} ahead</span>
-                </>
-              }
-              action={<div className="hidden xl:block">{legend}</div>}
+              numeral="IV."
+              title="Who did the damage"
+              id="damage-title"
+              caption={<span className="hidden xl:inline">Share of each team&apos;s hero damage</span>}
             />
-            <div className="xl:hidden">{legend}</div>
-            {view.lead.length === 0 ? (
-              <p className="py-2 text-sm text-muted-foreground">No souls snapshots were recorded for this match.</p>
-            ) : (
-              <SoulsLeadChart lead={view.lead} events={view.events} durationS={view.durationS} />
-            )}
+            <DamageShare scoreboard={view.scoreboard} />
           </Card>
+          <BuildOrder builds={view.builds} defaultBuild={view.defaultBuild} index={4} />
         </div>
-
-        <div className="mt-4 grid gap-4 md:mt-5 md:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          <Card index={1} aria-labelledby="objectives-title">
-            <SectionHeader
-              numeral="II."
-              title="Objectives"
-              id="objectives-title"
-              caption={<span className="hidden xl:inline">In the order they fell</span>}
-            />
-            <ObjectiveList events={view.events} />
-          </Card>
-          <Card index={2} aria-labelledby="scoreboard-title">
-            <SectionHeader
-              numeral="III."
-              title="Scoreboard"
-              id="scoreboard-title"
-              caption={<span className="md:hidden">Tap a player for full stats</span>}
-            />
-            <Scoreboard scoreboard={view.scoreboard} />
-          </Card>
-        </div>
-      </EventHighlightProvider>
-
-      <div className="mt-4 grid gap-4 md:mt-5 md:gap-5 xl:grid-cols-2">
-        <Card index={3} aria-labelledby="damage-title">
-          <SectionHeader
-            numeral="IV."
-            title="Who did the damage"
-            id="damage-title"
-            caption={<span className="hidden xl:inline">Share of each team&apos;s hero damage</span>}
-          />
-          <DamageShare scoreboard={view.scoreboard} />
-        </Card>
-        <BuildOrder builds={view.builds} defaultBuild={view.defaultBuild} index={4} />
+        <p className="sr-only">Final souls: {formatCompact(view.teams[KING].souls)} to {formatCompact(view.teams[MOTHER].souls)}.</p>
       </div>
-      <p className="sr-only">Final souls: {formatCompact(view.teams[KING].souls)} to {formatCompact(view.teams[MOTHER].souls)}.</p>
-    </div>
+    </RowHighlightProvider>
   );
 }

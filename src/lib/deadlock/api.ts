@@ -4,7 +4,7 @@
 // entry keeps being served until it expires.
 
 import { cacheLife, cacheTag } from "next/cache";
-import { deadlockFetch } from "./client";
+import { deadlockFetch, deadlockFetchTimed } from "./client";
 import { loadPlayerRanks } from "./rank-batcher";
 import {
   accountHeroStatsSchema,
@@ -418,9 +418,12 @@ export async function getLiveHeroRecords(matchId: number, players: { accountId: 
  * Matches in progress. 30 s cache: the Live page polls /api/live, which reads
  * this, so polling costs one upstream call per 30 s however many people watch.
  */
-export async function getActiveMatches(): Promise<ActiveMatch[]> {
+export async function getActiveMatches(): Promise<{ matches: ActiveMatch[]; dataAt: number }> {
   "use cache";
   cacheLife("live");
   cacheTag("live");
-  return mapActiveMatches(await deadlockFetch("/v1/matches/active", activeMatchesSchema));
+  // The API caches this list for ~2 min (up to ~4 with stale-while-revalidate), so
+  // keep when the data was produced: the live log times its points by it.
+  const { data, producedAt } = await deadlockFetchTimed("/v1/matches/active", activeMatchesSchema);
+  return { matches: mapActiveMatches(data), dataAt: producedAt };
 }
