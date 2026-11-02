@@ -10,16 +10,12 @@
  * https://github.com/DavidHDev/react-bits/blob/main/LICENSE.md
  *
  * Soul Ledger changes: `onLayout` and `onComplete` callbacks, `fillDuration` and
- * `fillEase` props, and `ease` also accepts an easing function. Used only through components/ui/InkTitle.tsx.
+ * `fillEase` props, and `ease` also accepts an easing function; the `scroll` trigger uses IntersectionObserver
+ * instead of GSAP ScrollTrigger. Used only through components/ui/InkTitle.tsx.
  */
 
 import { CSSProperties, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 export type StrokeTextTrigger = 'mount' | 'hover' | 'scroll' | 'loop';
 export type StrokeTextFillMode = 'wipe' | 'fade' | 'none';
@@ -296,7 +292,7 @@ const StrokeText = ({
     };
 
     let timeline: gsap.core.Timeline | null = null;
-    let scrollTrigger: ReturnType<typeof ScrollTrigger.create> | null = null;
+    let scrollObserver: IntersectionObserver | null = null;
     let redraw: gsap.core.Timeline | null = null;
     const listeners: (() => void)[] = [];
 
@@ -315,13 +311,18 @@ const StrokeText = ({
     } else {
       timeline = build();
       if (trigger !== 'loop') timeline.eventCallback('onComplete', () => onCompleteRef.current?.());
-      if (trigger === 'scroll') {
-        scrollTrigger = ScrollTrigger.create({
-          trigger: root,
-          start: 'top 82%',
-          once: true,
-          onEnter: () => timeline?.play(0)
-        });
+      if (trigger === 'scroll' && typeof IntersectionObserver !== 'undefined') {
+        // Plays once when the top of the text passes 82% of the viewport height
+        // (was GSAP ScrollTrigger; a native observer keeps the plugin out of the bundle).
+        scrollObserver = new IntersectionObserver(
+          entries => {
+            if (!entries.some(entry => entry.isIntersecting)) return;
+            scrollObserver?.disconnect();
+            timeline?.play(0);
+          },
+          { rootMargin: '0px 0px -18% 0px' }
+        );
+        scrollObserver.observe(root);
       } else {
         timeline.play(0);
       }
@@ -350,7 +351,7 @@ const StrokeText = ({
 
     return () => {
       listeners.forEach(handler => root.removeEventListener('pointerenter', handler));
-      scrollTrigger?.kill();
+      scrollObserver?.disconnect();
       timeline?.kill();
       redraw?.kill();
       march?.kill();

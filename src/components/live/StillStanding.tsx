@@ -18,9 +18,16 @@ function Pips({ team, left, total, alignEnd }: { team: TeamId; left: number; tot
 }
 
 /** Desktop panel: diamond pips per objective, filled = standing, hollow = destroyed. */
-export function StillStandingPips({ match }: { match: LiveMatchView }) {
+export function StillStandingPips({ match, teamHeaders = false }: { match: LiveMatchView; teamHeaders?: boolean }) {
   return (
     <div className="flex flex-col">
+      {teamHeaders && (
+        <div aria-hidden="true" className="grid grid-cols-[90px_minmax(0,1fr)_minmax(0,1fr)] gap-2.5 pb-1.5 text-xs">
+          <span />
+          <span className={TEAMS[KING].textClass}>{TEAMS[KING].shortName}</span>
+          <span className={cn("text-right", TEAMS[MOTHER].textClass)}>{TEAMS[MOTHER].shortName}</span>
+        </div>
+      )}
       {OBJECTIVES.map(({ kind, name }) => {
         const k = match.objectives[KING][kind];
         const m = match.objectives[MOTHER][kind];

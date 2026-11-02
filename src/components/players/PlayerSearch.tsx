@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
+import { BracketButton, FOCUS_RING, StampButton } from "@/components/ui/buttons";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
 import { RelativeTime } from "@/components/ui/RelativeTime";
@@ -180,12 +182,9 @@ export function PlayerSearch({ initialQuery, initialResult }: { initialQuery: st
             className="h-[52px] w-full border border-line-strong bg-surface pr-4 pl-11 text-base text-fg placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass xl:h-14"
           />
         </div>
-        <button
-          type="submit"
-          className="hidden h-[52px] items-center bg-brass px-5 text-sm font-medium text-ink hover:bg-fg md:flex xl:h-14"
-        >
+        <StampButton type="submit" className="hidden h-[52px] px-5 md:inline-flex xl:h-14">
           Search
-        </button>
+        </StampButton>
       </form>
 
       <p id="search-status" role="status" className="min-h-4 font-mono text-[11px] text-muted-foreground">
@@ -201,16 +200,11 @@ export function PlayerSearch({ initialQuery, initialResult }: { initialQuery: st
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Recent</span>
           {recent.map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => pickRecent(q)}
-              className="h-9 max-w-56 truncate border border-line-strong px-3 text-[13px] text-fg-2 hover:border-line-muted hover:text-fg"
-            >
-              {q}
-            </button>
+            <BracketButton key={q} onClick={() => pickRecent(q)} className="px-3 text-[13px] text-fg-2 hover:text-fg">
+              <span className="block max-w-48 truncate">{q}</span>
+            </BracketButton>
           ))}
-          <button type="button" onClick={() => writeRecent([])} className="h-9 px-2 text-[13px] text-brass hover:text-fg">
+          <button type="button" onClick={() => writeRecent([])} className={cn("h-11 px-2 text-[13px] text-brass transition-colors hover:text-fg", FOCUS_RING)}>
             Clear
           </button>
         </div>
@@ -245,16 +239,22 @@ function Results({
         numeral="I."
         title="Results"
         id="results-title"
-        caption={result && !failure ? `${count} ${count === 1 ? "player" : "players"} for “${result.query}”` : undefined}
+        caption={
+          result && !failure ? (
+            `${count} ${count === 1 ? "player" : "players"} for “${result.query}”`
+          ) : !failure ? (
+            <LedgerLoader messages={LOADER_MESSAGES.search} />
+          ) : undefined
+        }
       />
       {failure ? (
-        <SectionError failure={failure} onRetry={onRetry} />
+        <SectionError failure={failure} onRetry={onRetry} retryKey="search" />
       ) : !result ? (
         <ul aria-busy="true">
           {Array.from({ length: 3 }, (_, i) => (
             <li key={i} className="flex items-center gap-3 border-t border-rule py-3">
-              <span className="size-10 bg-surface-2" />
-              <span className="h-3 w-40 bg-surface-2" />
+              <span className="ink-wash size-10" />
+              <span className="ink-wash h-3 w-40" />
             </li>
           ))}
         </ul>

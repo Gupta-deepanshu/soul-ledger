@@ -4,9 +4,10 @@
 // entry keeps being served until it expires.
 
 import { cacheLife, cacheTag } from "next/cache";
-import { deadlockFetch } from "./client";
+import { deadlockFetch, deadlockFetchTimed } from "./client";
 import { loadPlayerRanks } from "./rank-batcher";
 import {
+  accountHeroStatsSchema,
   activeMatchesSchema,
   gameStatsSchema,
   heroCounterStatsSchema,
@@ -240,6 +241,31 @@ export async function getPlayerHeroRecords(accountId: number): Promise<PlayerHer
   return raw.map((h) => ({ heroId: h.hero_id, matches: h.matches_played, wins: h.wins }));
 }
 
+/**
+ * The player's record against each enemy hero (normal mode, all time), for
+ * "Toughest heroes". The API returns one row per (own hero, enemy hero) pair,
+ * so rows are summed per enemy hero. Each enemy hero appears at most once per
+ * match, so the sum is matches played against it. Only covers matches the
+ * analytics data has, which can be fewer than the full history.
+ */
+export async function getPlayerEnemyHeroes(accountId: number): Promise<PlayerHeroRecord[]> {
+  "use cache";
+  cacheLife("player");
+  cacheTag("player", `player-${accountId}`);
+  const raw = await deadlockFetch("/v1/analytics/hero-counter-stats", heroCounterStatsSchema, {
+    query: { account_id: accountId, game_mode: "normal", min_unix_timestamp: 0, min_matches: 1 },
+    fixture: `player-${accountId}-enemy-heroes`,
+  });
+  const byEnemy = new Map<number, PlayerHeroRecord>();
+  for (const r of raw) {
+    const rec = byEnemy.get(r.enemy_hero_id) ?? { heroId: r.enemy_hero_id, matches: 0, wins: 0 };
+    rec.matches += r.matches_played;
+    rec.wins += r.wins;
+    byEnemy.set(r.enemy_hero_id, rec);
+  }
+  return [...byEnemy.values()];
+}
+
 export async function getPlayerMates(accountId: number): Promise<PlayerMate[]> {
   "use cache";
   cacheLife("player");
@@ -352,12 +378,52 @@ export async function getMatchAverageRank(matchId: number, accountIds: number[])
 }
 
 /**
+ * Each player's rank in one live match, cached per match for 1 h (players don't
+ * change mid-match). Goes through ./rank-batcher like getMatchAverageRank.
+ */
+export async function getLivePlayerRanks(matchId: number, accountIds: number[]): Promise<{ accountId: number; badge: Badge | null }[]> {
+  "use cache";
+  cacheLife("liveRank");
+  cacheTag("live-rank", `live-rank-${matchId}`);
+  const ranks = await loadPlayerRanks(accountIds);
+  return accountIds.map((id) => ({ accountId: id, badge: ranks.get(id)?.badge ?? null }));
+}
+
+export type LiveHeroRecord = { accountId: number; heroId: number; matches: number; wins: number };
+
+/**
+ * Each live player's all-time normal-mode record on the hero they're playing,
+ * in one request for the whole match. Cached per match for 1 h.
+ */
+export async function getLiveHeroRecords(matchId: number, players: { accountId: number; heroId: number }[]): Promise<LiveHeroRecord[]> {
+  "use cache";
+  cacheLife("liveRank");
+  cacheTag("live-players", `live-players-${matchId}`);
+  const raw = await deadlockFetch("/v1/players/hero-stats", accountHeroStatsSchema, {
+    query: {
+      account_ids: [...new Set(players.map((p) => p.accountId))].join(","),
+      hero_ids: [...new Set(players.map((p) => p.heroId))].join(","),
+      game_mode: "normal",
+    },
+    fixture: "live-players-hero-stats",
+  });
+  // The response crosses every account with every hero asked for; keep each player's own hero.
+  const wanted = new Set(players.map((p) => `${p.accountId}:${p.heroId}`));
+  return raw
+    .filter((r) => wanted.has(`${r.account_id}:${r.hero_id}`))
+    .map((r) => ({ accountId: r.account_id, heroId: r.hero_id, matches: r.matches_played, wins: r.wins }));
+}
+
+/**
  * Matches in progress. 30 s cache: the Live page polls /api/live, which reads
  * this, so polling costs one upstream call per 30 s however many people watch.
  */
-export async function getActiveMatches(): Promise<ActiveMatch[]> {
+export async function getActiveMatches(): Promise<{ matches: ActiveMatch[]; dataAt: number }> {
   "use cache";
   cacheLife("live");
   cacheTag("live");
-  return mapActiveMatches(await deadlockFetch("/v1/matches/active", activeMatchesSchema));
+  // The API caches this list for ~2 min (up to ~4 with stale-while-revalidate), so
+  // keep when the data was produced: the live log times its points by it.
+  const { data, producedAt } = await deadlockFetchTimed("/v1/matches/active", activeMatchesSchema);
+  return { matches: mapActiveMatches(data), dataAt: producedAt };
 }

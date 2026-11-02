@@ -15,9 +15,70 @@ from mappers in `src/lib/deadlock/` (see the `deadlock-api` skill).
 - `role="img"` + `aria-label` stating the takeaway in one sentence, generated from the data.
 - Numbers in Geist Mono, `tabular-nums`. Axis labels mono 11 px in `faint`.
 - SVG charts use a fixed `viewBox` and `width: 100%; height: auto`. On phones,
-  increase stroke widths and label sizes inside the viewBox (see the mobile
-  designs) rather than shrinking the text to nothing.
+  increase stroke widths inside the viewBox (see the mobile designs). Label
+  sizes are set from the measured width (`charts/useViewBoxScale`) so labels
+  render at 11 px on screen at every width, never shrinking with the SVG.
+- Text on a data-driven fill must reach 4.5:1: pick ink or fg with
+  `bestText()` from `lib/contrast.ts`, and if neither passes, lighten the fill
+  (matchup grid) or put the label on a dark plate (damage share).
+- Focusable charts and lists show a visible 2 px brass `focus-visible` outline
+  (`outline-hidden focus-visible:outline-solid …`; plain `outline-none` cancels it
+  in Tailwind v4). A list of many rows is one tab stop with arrow-key movement.
 - Takes typed props only, no fetching inside chart components.
+
+## Hover and tooltips
+
+Every chart shows the detail behind a mark, using `charts/ChartTooltip.tsx`.
+Only show what isn't already printed next to the mark (WinRateBar, TickMeter
+and TeamSplitBar have their numbers beside them, so they get no tooltip).
+
+- **Tablet and desktop (≥ 768 px): `ChartTooltip`.** Shown on mouse hover and on
+  keyboard focus; `hidden md:flex`, `aria-hidden`. It sits above the chart (or
+  the hovered cell or bar), leaning left or right near the edges (`x` < 25 or
+  > 75). Same look everywhere: `ink` fill, `line-strong` border, mono 11 px; the
+  first line names the thing in `fg`, the second gives the value (team or
+  result colour), the third is `Muted` context (date, games, change).
+- **Phone (< 768 px): no floating tooltips. `ChartReadout`** is a one-line
+  detail strip directly under the chart (`md:hidden`, `aria-live="polite"`).
+  It shows the most recent item by default (or the most telling one where there
+  is no order: the biggest matchup edge, the most common rank, the top damage
+  dealer) and changes when a mark is tapped. The selected mark gets a 2 px
+  brass outline (bars, cells) or ring (points), on phone only. Long text is cut
+  with an ellipsis; a link goes in `action` so it never wraps.
+- **Pointer handling.** Hover state comes from `pointerType === "mouse"` only,
+  so a tap never leaves a hover stuck on; taps select via `isPhoneViewport()`
+  at click time.
+- **Keyboard.** The chart is one tab stop (`tabIndex={0}`, `role="group"`, an
+  aria-label that ends "Use the arrow keys…"). Left/Right step through points
+  or bars (Up/Down too in the grid), Escape clears. A `sr-only` `aria-live`
+  line reads the current item, so the tooltip itself stays `aria-hidden`.
+- **Links.** Last 20 bars are real `<Link>`s to `/matches/[id]` with an
+  aria-label like "Match 12: Warden, win, KDA 3.4, 2 days ago". Desktop: hover
+  or focus shows the tooltip, click or Enter opens the match. Phone: the first
+  tap selects; "Open match →" in the readout opens it. The climb's readout has
+  the same link.
+- **Linked highlights.** When a list and a chart show the same things, hovering
+  one highlights the other through `ui/RowHighlight.tsx` (keys: match id,
+  account id, hero id): match history ↔ Last 20, scoreboard ↔ damage share,
+  hero standings ↔ the matchup grid's labels. Objective rows ↔ souls-lead
+  diamonds use the older `EventHighlight`. Mouse only; without a provider
+  nothing happens, so the charts still work alone.
+- Relative dates in labels and tooltips come from `useRelativeTime()` (plain
+  date on the server, "2 days ago" after hydration).
+
+What each chart shows:
+
+| Chart | Tooltip / readout |
+|---|---|
+| Last 20 | Hero, Win/Loss, K/D/A and KDA, souls, length, when |
+| Climb | Rank, change from the match before, hero, result, when |
+| Matchup grid (Meta, live draft) | "Haze wins 53.1% of 28,382 games vs Viscous"; crosshair on the row and column |
+| Rank distribution | Tier, share, ≈ players, "top X% with this rank or higher" |
+| Damage share | Player, hero, exact damage and % of team, K/D/A, souls |
+| Souls lead (match) | Time, lead, "Archmother gained 759 since 9:00" |
+| Lead sparkline (live) | Time, lead, change since the previous update |
+| Movers (list) | Last patch → this patch win rate |
+| Live card hero tiles | Hero name (CSS `group-hover`, tablet/desktop) |
 
 ## SoulsLeadChart (match report)
 
@@ -59,8 +120,9 @@ from mappers in `src/lib/deadlock/` (see the `deadlock-api` skill).
 ## RankDistribution (meta)
 
 - Input: `{ tier: number; name: string; share: number }[]`.
-- Vertical bars, 4–5 px gaps; percentage above each bar in mono 10 px, 3-letter
-  rank abbreviations below. Bars `line-muted`, highlighted tiers (Oracle and above,
+- Vertical bars, 4–5 px gaps; percentage above each bar and 3-letter rank
+  abbreviations below, both mono 10 px (11 px on desktop). This overrides the
+  8/9 px in MetaMobile. Bars `line-muted`, highlighted tiers (Oracle and above,
   or the user's filter) in brass. May use the rank colours from the API instead —
   ask before switching.
 - Caption names the median tier.
@@ -70,6 +132,11 @@ from mappers in `src/lib/deadlock/` (see the `deadlock-api` skill).
 See `soul-ledger-design` § Components for exact styling. Widths come from data:
 - WinRateBar: `(wr − 40) / 20` clamped 0–1.
 - TickMeter: ticks filled while `44 + i × 0.5 ≤ wr`.
+- Items that win (meta) ranks items by **lift**: win rate minus the purchase-weighted
+  average win rate of all items at the same tier (cost). Raw win rate only lists
+  late 6,400-soul items. The row number is the lift (`+2.1`), the details line shows
+  cost, raw win rate and buy share, and the TickMeter takes `0.5 + lift` so its
+  ticks read −6 → +6 points.
 - TeamSplitBar: flex weights = each team's souls.
 
 ## Matchup grid (meta)
@@ -77,7 +144,9 @@ See `soul-ledger-design` § Components for exact styling. Widths come from data:
 - Input: 6 × 6 heroes; each cell = row hero's win rate vs column hero − 50.
 - Diagonal cells show "—" on `surface-2`.
 - Cell fill: brass if positive, `mother` if negative; opacity `0.15 + |v| / 4.5`
-  capped at 0.85. Text `ink` when `|v| > 2.6`, else `fg`.
+  capped at 0.85. Text is `ink` or `fg`, whichever contrasts more (`bestText`);
+  where neither reaches 4.5:1 (brass ≈ ±1.6–2.2, mother ≈ ±2.4–2.9) the fill is
+  eased lighter until `fg` passes.
 - Value text: `+2.1` / `−1.4` (use a real minus sign).
 - Only show pairs with enough matches (see `deadlock-api`); otherwise "n/a".
 
@@ -86,14 +155,16 @@ See `soul-ledger-design` § Components for exact styling. Widths come from data:
 - One stacked horizontal bar per team, segments sorted largest first, 2 px gaps.
 - Team colour shades from light to dark (king: `#F0912E #C97526 #A35F20 #7E4A1A #5C3614 #40260F`;
   mother: `#5E8BFF #4C72D4 #3D5CAB #2F4784 #22345F #182543`).
-- Desktop/tablet: labels inside segments ("Haze 22%"). Phone: no inside labels;
-  a 3-column legend underneath.
+- Desktop/tablet: labels inside segments ("Haze 22%"), ink or fg by contrast; the
+  mid shades that pass with neither get a dark `ink/70` plate. Phone: no inside
+  labels; a 3-column legend underneath.
 
 ## Build order (match)
 
 - A grid of purchases in time order: ItemChip (tier, slot colour) + item name + time.
-- Items later sold stay in the grid, dimmed, with "sold 19:20" after the buy time
-  (see `deadlock-api` § Build order).
+- Items later sold stay in the grid with "sold 19:20" after the buy time (see
+  `deadlock-api` § Build order). Only the ItemChip is dimmed (50%); the name turns
+  `muted` and stays ≥ 4.5:1.
 - Desktop auto-fills columns ≥ 150 px; tablet 3 columns; phone 2 columns.
 - A select chooses whose build to show (default: the MVP).
 

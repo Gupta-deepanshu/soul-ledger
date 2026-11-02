@@ -39,19 +39,20 @@ export function BuildOrder({ builds, defaultBuild, index }: { builds: PlayerBuil
       {!build || build.items.length === 0 ? (
         <p className="py-2 text-sm text-muted-foreground">No item purchases recorded for this player.</p>
       ) : (
-        <ol className="grid grid-cols-2 gap-x-3 md:grid-cols-3 md:gap-x-4 xl:grid-cols-[repeat(auto-fill,minmax(150px,1fr))]">
+        <ol className="grid grid-cols-2 gap-x-3 md:grid-cols-3 md:gap-x-4 xl:grid-cols-[repeat(auto-fill,minmax(170px,1fr))]">
           <AnimatePresence mode="popLayout" initial={false}>
             {build.items.map((item, i) => (
               <motion.li
                 key={`${build.accountId}-${i}`}
                 initial={{ opacity: 0 }}
-                animate={{ opacity: item.soldAtS ? 0.5 : 1 }}
+                animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2 border-t border-rule py-2 md:grid-cols-[30px_minmax(0,1fr)] md:gap-2.5 md:py-2.5"
+                className="grid grid-cols-[36px_minmax(0,1fr)] items-center gap-2 border-t border-rule py-2 md:grid-cols-[40px_minmax(0,1fr)] md:gap-2.5 md:py-2.5"
               >
-                <ItemChip slot={item.slot} tier={item.tier} />
+                {/* Sold items: only the chip is dimmed, so the text keeps 4.5:1. */}
+                <ItemChip slot={item.slot} tier={item.tier} imageUrl={item.imageUrl} name={item.name} className={item.soldAtS != null ? "opacity-50" : undefined} />
                 <span className="flex min-w-0 flex-col gap-px">
-                  <span className="truncate text-xs md:text-[13px]">{item.name}</span>
+                  <span className={cn("truncate text-xs md:text-[13px]", item.soldAtS != null && "text-muted-foreground")}>{item.name}</span>
                   <span className="font-mono text-[10px] text-muted-foreground md:text-[11px]">
                     {formatDuration(item.boughtAtS)}
                     {item.soldAtS != null && ` · sold ${formatDuration(item.soldAtS)}`}

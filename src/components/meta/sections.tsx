@@ -5,7 +5,8 @@
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SectionError } from "@/components/ui/SectionError";
-import { StatCell, StatGrid, type Stat } from "@/components/ui/StatGrid";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
+import { StatCell, StatGrid, StatRow, type Stat } from "@/components/ui/StatGrid";
 import { RankDistribution } from "@/components/charts/RankDistribution";
 import { MatchupGrid } from "@/components/charts/MatchupGrid";
 import {
@@ -65,7 +66,7 @@ function ErrorCard({ numeral, title, failure, index }: { numeral: string; title:
   return (
     <Card index={index}>
       <SectionHeader numeral={numeral} title={title} />
-      <SectionError failure={failure} />
+      <SectionError failure={failure} retryKey={title} />
     </Card>
   );
 }
@@ -76,16 +77,16 @@ function Empty({ children }: { children: React.ReactNode }) {
 
 const EMPTY_AT_RANK = "Not enough matches at this rank yet.";
 
-/** Static placeholder in the card's shape. No looping animation (the live dot is the only one). */
+/** Placeholder in the card's shape: ink-wash blocks, and the ledger loader in the header after 600 ms. */
 export function CardSkeleton({ numeral, title, rows = 6, className }: { numeral: string; title: string; rows?: number; className?: string }) {
   return (
     <div aria-busy="true" className={`flex min-w-0 flex-col gap-2.5 border border-line bg-surface p-4 md:gap-3.5 md:p-[22px] xl:gap-4 xl:px-[26px] xl:py-6 ${className ?? ""}`}>
-      <SectionHeader numeral={numeral} title={title} caption={<span className="sr-only">Loading…</span>} />
+      <SectionHeader numeral={numeral} title={title} caption={<LedgerLoader messages={LOADER_MESSAGES.meta} />} />
       <div className="flex flex-col">
         {Array.from({ length: rows }, (_, i) => (
           <div key={i} className="flex items-center gap-3 border-t border-rule py-3">
-            <span className="size-[30px] shrink-0 bg-surface-2" />
-            <span className="h-2.5 flex-1 bg-surface-2" />
+            <span className="ink-wash size-[30px] shrink-0" />
+            <span className="ink-wash h-2.5 flex-1" />
           </div>
         ))}
       </div>
@@ -95,13 +96,13 @@ export function CardSkeleton({ numeral, title, rows = 6, className }: { numeral:
 
 export function PatchTotalsSkeleton() {
   return (
-    <section aria-busy="true" aria-label="Patch totals" className="grid grid-cols-2 gap-px border border-line bg-line xl:grid-cols-4 xl:gap-0 xl:border-0 xl:border-b xl:bg-transparent">
+    <StatRow label="Patch totals" columns={4} busy>
       {["Matches this patch", "Average match", `${TEAMS[0].shortName} wins`, "Souls per minute"].map((label) => (
-        <StatCell key={label} label={label} note={<span className="opacity-0">–</span>}>
-          <span className="text-faint">—</span>
+        <StatCell key={label} label={label} note={<span className="ink-wash block h-3 w-28" />}>
+          <span className="ink-wash block h-[34px] w-24 md:h-[44px] xl:h-[52px]" />
         </StatCell>
       ))}
-    </section>
+    </StatRow>
   );
 }
 
@@ -122,7 +123,7 @@ export async function PatchTotals({ minTier }: SectionProps) {
   if (!result.ok) {
     return (
       <section aria-label="Patch totals" className="border border-line p-4 xl:border-0 xl:border-b xl:px-0">
-        <SectionError failure={result.failure} />
+        <SectionError failure={result.failure} retryKey="patch-totals" />
       </section>
     );
   }

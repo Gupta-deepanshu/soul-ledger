@@ -8,6 +8,8 @@ import { HeroTile } from "@/components/ui/HeroTile";
 import { RelativeTime } from "@/components/ui/RelativeTime";
 import { formatCompact, formatDuration, formatSigned } from "@/lib/format";
 import type { HistoryRow } from "@/lib/deadlock/player";
+import { BracketButton } from "@/components/ui/buttons";
+import { highlightHandlers, useRowHighlight } from "@/components/ui/RowHighlight";
 
 const PAGE = 10;
 
@@ -23,6 +25,8 @@ const resultClass = (won: boolean) => (won ? "text-brass" : "text-mother-text");
  */
 export function MatchHistory({ rows }: { rows: HistoryRow[] }) {
   const [shown, setShown] = useState(PAGE);
+  // Hovering a row highlights its bar in Last 20, and the reverse (tablet/desktop table).
+  const { active, setActive } = useRowHighlight();
   const visible = rows.slice(0, shown);
   const enter = { initial: { opacity: 0, y: -8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0 } };
 
@@ -44,7 +48,12 @@ export function MatchHistory({ rows }: { rows: HistoryRow[] }) {
           <tbody>
             <AnimatePresence initial={false}>
               {visible.map((r) => (
-                <motion.tr key={r.matchId} {...enter} className="border-t border-rule text-right font-mono text-fg-2">
+                <motion.tr
+                  key={r.matchId}
+                  {...enter}
+                  {...highlightHandlers(setActive, r.matchId)}
+                  className={cn("border-t border-rule text-right font-mono text-fg-2 transition-colors", active === r.matchId && "bg-surface-2")}
+                >
                   <td className="py-2.5 text-left xl:py-[11px]">
                     <Link href={`/matches/${r.matchId}`} className="flex items-center gap-2 hover:text-fg xl:gap-2.5">
                       <HeroTile name={r.heroName} iconUrl={r.heroIcon} size={28} />
@@ -102,13 +111,9 @@ export function MatchHistory({ rows }: { rows: HistoryRow[] }) {
       </ul>
 
       {rows.length > shown && (
-        <button
-          type="button"
-          onClick={() => setShown((n) => n + PAGE)}
-          className="h-11 w-full border border-line-strong text-sm font-medium text-brass hover:border-line-muted md:w-auto md:self-start md:px-4"
-        >
+        <BracketButton onClick={() => setShown((n) => n + PAGE)} className="w-full md:w-auto md:self-start">
           Show more matches
-        </button>
+        </BracketButton>
       )}
     </>
   );

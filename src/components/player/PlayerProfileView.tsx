@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SampleBadge } from "@/components/ui/SampleBadge";
+import { ArrowLink } from "@/components/ui/buttons";
 import { StatGrid, type Stat } from "@/components/ui/StatGrid";
 import { WinRateBar } from "@/components/ui/WinRateBar";
 import { RelativeTime } from "@/components/ui/RelativeTime";
@@ -15,6 +15,7 @@ import { RefreshButton } from "./RefreshButton";
 import { HeroBackground } from "@/components/ui/HeroBackground";
 import { InkTitle } from "@/components/ui/InkTitle";
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
+import { RowHighlightProvider } from "@/components/ui/RowHighlight";
 import { canInkName } from "@/lib/ink";
 
 const monthYear = (unix: number) => new Date(unix * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
@@ -32,7 +33,7 @@ function PlayerHero({ view, sample }: { view: PlayerView; sample: boolean }) {
     </>
   );
   return (
-    <section className="relative flex flex-col gap-3.5 overflow-hidden border-b border-line pt-[22px] pb-5 md:gap-[18px] md:pt-4 md:pb-6 xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-11 xl:pb-9">
+    <section className="relative flex flex-col gap-3.5 border-b border-line pt-[22px] pb-5 md:gap-[18px] md:pt-4 md:pb-6 xl:flex-row xl:flex-wrap xl:items-end xl:justify-between xl:gap-8 xl:pt-11 xl:pb-9">
       <HeroBackground variant="radial" className="absolute top-0 -right-2.5 h-full w-60 md:right-0 md:w-[420px] xl:w-[620px]" />
       <div className="relative flex items-center gap-3.5 md:items-end md:gap-[22px] xl:gap-7">
         <PlayerAvatar
@@ -177,10 +178,10 @@ function AlliesRivals({ view, index }: { view: PlayerView; index: number }) {
           empty="No regular teammates yet"
         />
         <PairList
-          title="STRUGGLES ON"
-          rows={view.strugglesOn.map((h) => ({ key: String(h.heroId), ...h }))}
+          title="TOUGHEST HEROES"
+          rows={view.toughestHeroes.map((h) => ({ key: String(h.heroId), ...h }))}
           tone="text-mother-text"
-          empty="Not enough games per hero yet"
+          empty="Not enough games against any hero yet"
         />
       </div>
     </Card>
@@ -192,84 +193,87 @@ export function PlayerProfileView({ view, sample }: { view: PlayerView; sample: 
   const avgKda = view.form.reduce((s, f) => s + f.kda, 0) / Math.max(view.form.length, 1);
 
   return (
-    <div className="flex flex-col">
-      <PlayerHero view={view} sample={sample} />
-      <Totals view={view} />
+    // Links Last 20 and Match history (hover a row or a bar to highlight the other).
+    <RowHighlightProvider>
+      <div className="flex flex-col">
+        <PlayerHero view={view} sample={sample} />
+        <Totals view={view} />
 
-      <div className="mt-4 grid gap-4 md:mt-5 md:grid-cols-2 md:gap-5 xl:mt-8">
-        <Card index={0} aria-labelledby="climb-title">
-          <SectionHeader
-            numeral="I."
-            title="The climb"
-            id="climb-title"
-            caption={`Rank badge across the last ${view.climb.length} ranked matches`}
-          />
-          {view.climb.length < 2 ? (
-            <p className="py-2 text-sm text-muted-foreground">Not enough ranked matches with a rank yet.</p>
-          ) : (
-            <RankClimb climb={view.climb} tierNames={view.tierNames} />
-          )}
-        </Card>
-        <Card index={1} aria-labelledby="form-title">
-          <SectionHeader
-            numeral="II."
-            title={`Last ${view.form.length} matches`}
-            id="form-title"
-            caption={<span className="hidden md:inline">Bar height = KDA · wins up, losses down</span>}
-            action={
-              <span className="font-serif text-[30px] leading-none xl:text-4xl">
-                {wins}
-                <span className="text-muted-foreground">–</span>
-                {view.form.length - wins}
-              </span>
-            }
-          />
-          {view.form.length === 0 ? (
-            <p className="py-2 text-sm text-muted-foreground">No matches on record.</p>
-          ) : (
-            <>
-              <FormBars form={view.form} />
-              <div className="flex flex-wrap gap-3.5 font-mono text-[11px] text-muted-foreground md:gap-[18px] xl:text-xs">
-                <span className="flex items-center gap-1.5">
-                  <span aria-hidden="true" className="size-2.5 bg-brass xl:size-3" />
-                  Win
+        <div className="mt-4 grid gap-4 md:mt-5 md:grid-cols-2 md:gap-5 xl:mt-8">
+          <Card index={0} aria-labelledby="climb-title">
+            <SectionHeader
+              numeral="I."
+              title="The climb"
+              id="climb-title"
+              caption={`Rank badge across the last ${view.climb.length} ranked matches`}
+            />
+            {view.climb.length < 2 ? (
+              <p className="py-2 text-sm text-muted-foreground">Not enough ranked matches with a rank yet.</p>
+            ) : (
+              <RankClimb climb={view.climb} tierNames={view.tierNames} />
+            )}
+          </Card>
+          <Card index={1} aria-labelledby="form-title">
+            <SectionHeader
+              numeral="II."
+              title={`Last ${view.form.length} matches`}
+              id="form-title"
+              caption={<span className="hidden md:inline">Bar height = KDA · wins up, losses down</span>}
+              action={
+                <span className="font-serif text-[30px] leading-none xl:text-4xl">
+                  {wins}
+                  <span className="text-muted-foreground">–</span>
+                  {view.form.length - wins}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <span aria-hidden="true" className="size-2.5 bg-mother xl:size-3" />
-                  Loss
-                </span>
-                <span>Avg KDA {formatKda(avgKda)}</span>
-              </div>
-            </>
-          )}
-        </Card>
-      </div>
+              }
+            />
+            {view.form.length === 0 ? (
+              <p className="py-2 text-sm text-muted-foreground">No matches on record.</p>
+            ) : (
+              <>
+                <FormBars form={view.form} />
+                <div className="flex flex-wrap gap-3.5 font-mono text-[11px] text-muted-foreground md:gap-[18px] xl:text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <span aria-hidden="true" className="size-2.5 bg-brass xl:size-3" />
+                    Win
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span aria-hidden="true" className="size-2.5 bg-mother xl:size-3" />
+                    Loss
+                  </span>
+                  <span>Avg KDA {formatKda(avgKda)}</span>
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
 
-      <div className="mt-4 grid gap-4 md:mt-5 md:gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <Card index={2} aria-labelledby="history-title">
-          <SectionHeader
-            numeral="III."
-            title="Match history"
-            id="history-title"
-            action={
-              view.history[0] && (
-                <Link href={`/matches/${view.history[0].matchId}`} className="hidden text-sm text-brass hover:text-fg xl:inline">
-                  Open latest match →
-                </Link>
-              )
-            }
-          />
-          {view.history.length === 0 ? (
-            <p className="py-2 text-sm text-muted-foreground">No public matches on record for this player.</p>
-          ) : (
-            <MatchHistory rows={view.history} />
-          )}
-        </Card>
-        <div className="grid gap-4 md:grid-cols-2 md:gap-5 xl:flex xl:flex-col">
-          <HeroPool view={view} index={3} />
-          <AlliesRivals view={view} index={4} />
+        <div className="mt-4 grid gap-4 md:mt-5 md:gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <Card index={2} aria-labelledby="history-title">
+            <SectionHeader
+              numeral="III."
+              title="Match history"
+              id="history-title"
+              action={
+                view.history[0] && (
+                  <ArrowLink href={`/matches/${view.history[0].matchId}`} className="-my-3 hidden xl:inline-flex">
+                    Open latest match
+                  </ArrowLink>
+                )
+              }
+            />
+            {view.history.length === 0 ? (
+              <p className="py-2 text-sm text-muted-foreground">No public matches on record for this player.</p>
+            ) : (
+              <MatchHistory rows={view.history} />
+            )}
+          </Card>
+          <div className="grid gap-4 md:grid-cols-2 md:gap-5 xl:flex xl:flex-col">
+            <HeroPool view={view} index={3} />
+            <AlliesRivals view={view} index={4} />
+          </div>
         </div>
       </div>
-    </div>
+    </RowHighlightProvider>
   );
 }

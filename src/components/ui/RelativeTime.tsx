@@ -22,13 +22,22 @@ function relative(unix: number, now: number): string {
 /** Current minute (stable between renders within a minute); 0 on the server. */
 const currentMinute = () => Math.floor(Date.now() / 60_000);
 
-export function RelativeTime({ unix }: { unix: number }) {
+/**
+ * The same text as RelativeTime as a function, for labels and tooltips:
+ * a plain date on the server and during hydration, relative time after.
+ */
+export function useRelativeTime(): (unix: number) => string {
   const minute = useSyncExternalStore(subscribe, currentMinute, () => 0);
-  const date = new Date(unix * 1000);
-  const text =
+  return (unix) =>
     minute > 0
       ? relative(unix, minute * 60)
-      : date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+      : new Date(unix * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+export function RelativeTime({ unix }: { unix: number }) {
+  const format = useRelativeTime();
+  const date = new Date(unix * 1000);
+  const text = format(unix);
   return (
     <time dateTime={date.toISOString()} title={date.toLocaleString("en-US")}>
       {text}

@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HeroTile } from "@/components/ui/HeroTile";
+import { ArrowLink, FOCUS_RING } from "@/components/ui/buttons";
+import { highlightHandlers, useRowHighlight } from "@/components/ui/RowHighlight";
 import { formatCompact, formatInt } from "@/lib/format";
 import { KING, MOTHER, TEAMS, type TeamId } from "@/lib/deadlock/teams";
 import type { ScoreRow } from "@/lib/deadlock/match";
@@ -26,11 +28,23 @@ function PlayerName({ row, className }: { row: ScoreRow; className?: string }) {
 const kda = (r: ScoreRow) => `${r.kills} / ${r.deaths} / ${r.assists}`;
 
 function TeamTable({ team, rows }: { team: TeamId; rows: ScoreRow[] }) {
+  // Hovering a row highlights the player in "Who did the damage", and the reverse.
+  const { active, setActive } = useRowHighlight();
   const t = TEAMS[team];
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[13px] xl:min-w-[720px] xl:text-sm">
+      {/* Fixed column widths so both teams' tables line up column for column. */}
+      <table className="w-full table-fixed border-collapse text-[13px] xl:min-w-[720px] xl:text-sm">
         <caption className={cn("pb-2 text-left font-mono text-xs uppercase tracking-[0.08em]", t.textClass)}>{t.name}</caption>
+        <colgroup>
+          <col className="w-[34%]" />
+          <col className="w-[16%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+          <col className="w-[10%]" />
+        </colgroup>
         <thead>
           <tr className="text-right font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground xl:text-[11px]">
             <th scope="col" className="py-2 text-left font-normal">Hero · player</th>
@@ -44,7 +58,11 @@ function TeamTable({ team, rows }: { team: TeamId; rows: ScoreRow[] }) {
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.accountId} className="border-t border-rule text-right font-mono text-fg-2">
+            <tr
+              key={r.accountId}
+              {...highlightHandlers(setActive, r.accountId)}
+              className={cn("border-t border-rule text-right font-mono text-fg-2 transition-colors", active === r.accountId && "bg-surface-2")}
+            >
               <th scope="row" className="py-[9px] text-left font-normal xl:py-2.5">
                 <div className="flex items-center gap-2 xl:gap-2.5">
                   <HeroTile name={r.heroName} iconUrl={r.heroIcon} size={28} borderClass={t.borderClass} className="xl:[--tile:30px]" />
@@ -90,7 +108,7 @@ function PhoneRow({ row, team }: { row: ScoreRow; team: TeamId }) {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
-        className="grid min-h-[52px] w-full grid-cols-[30px_minmax(0,1fr)_auto_16px] items-center gap-2.5 py-1.5 text-left"
+        className={cn("grid min-h-[52px] w-full grid-cols-[30px_minmax(0,1fr)_auto_16px] items-center gap-2.5 py-1.5 text-left", FOCUS_RING)}
       >
         <HeroTile name={row.heroName} iconUrl={row.heroIcon} size={30} borderClass={t.borderClass} />
         <span className="flex min-w-0 flex-col gap-px">
@@ -124,9 +142,9 @@ function PhoneRow({ row, team }: { row: ScoreRow; team: TeamId }) {
               ))}
             </dl>
             {row.playerName && (
-              <Link href={`/players/${row.accountId}`} className="self-start py-1 text-[13px] text-brass">
-                Player profile →
-              </Link>
+              <ArrowLink href={`/players/${row.accountId}`} className="self-start text-[13px]">
+                Player profile
+              </ArrowLink>
             )}
           </motion.div>
         )}

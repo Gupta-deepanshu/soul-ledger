@@ -115,10 +115,11 @@ export function buildHeroRows(
     });
 }
 
-export type Mover = { heroId: number; name: string; delta: number };
+/** `winRate` is this patch (0–1); `delta` the change in points since last patch. */
+export type Mover = { heroId: number; name: string; delta: number; winRate: number };
 
 export function buildMovers(rows: HeroRow[], count = 3): { rising: Mover[]; falling: Mover[] } {
-  const changed = rows.flatMap((r) => (r.delta == null ? [] : [{ heroId: r.heroId, name: r.name, delta: r.delta }]));
+  const changed = rows.flatMap((r) => (r.delta == null ? [] : [{ heroId: r.heroId, name: r.name, delta: r.delta, winRate: r.winRate }]));
   return {
     rising: changed.filter((m) => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, count),
     falling: changed.filter((m) => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, count),
@@ -136,6 +137,13 @@ export type ItemRow = {
   /** Shop art (null for the rare item without any). */
   imageUrl: string | null;
   winRate: number;
+  /**
+   * Win rate minus the average win rate of all items at the same tier (cost),
+   * weighted by purchases, 0–1 scale (0.021 = 2.1 points better). Raw win rate
+   * favours late, expensive items (teams that can afford them are usually
+   * ahead already); comparing within a tier shows which purchase actually helps.
+   */
+  lift: number;
   /** Share of player-games in which it was bought, 0–1. */
   buyShare: number;
 };
@@ -143,14 +151,39 @@ export type ItemRow = {
 export function buildItemRows(stats: ItemStat[], items: Item[], totals: GameTotals, perSlot = 6): Record<ItemSlot, ItemRow[]> {
   const byId = new Map(items.map((i) => [i.id, i]));
   const playerGames = totals.matches * HEROES_PER_MATCH;
-  const rows = stats.flatMap((s) => {
+  const kept = stats.flatMap((s) => {
     const item = byId.get(s.itemId);
     const buyShare = s.buys / playerGames;
     if (!item || buyShare < MIN_ITEM_BUY_SHARE) return [];
-    return [{ itemId: item.id, name: item.name, slot: item.slot, tier: item.tier, cost: item.cost, imageUrl: item.imageUrl, winRate: s.winRate, buyShare }];
+    return [{ item, stat: s, buyShare }];
   });
+
+  // Purchase-weighted average win rate per tier, across all slots.
+  const tierTotals = new Map<number, { wins: number; buys: number }>();
+  for (const { item, stat } of kept) {
+    const t = tierTotals.get(item.tier) ?? { wins: 0, buys: 0 };
+    t.wins += stat.wins;
+    t.buys += stat.buys;
+    tierTotals.set(item.tier, t);
+  }
+  const tierAverage = (tier: number) => {
+    const t = tierTotals.get(tier);
+    return t && t.buys > 0 ? t.wins / t.buys : 0.5;
+  };
+
+  const rows: ItemRow[] = kept.map(({ item, stat, buyShare }) => ({
+    itemId: item.id,
+    name: item.name,
+    slot: item.slot,
+    tier: item.tier,
+    cost: item.cost,
+    imageUrl: item.imageUrl,
+    winRate: stat.winRate,
+    lift: stat.winRate - tierAverage(item.tier),
+    buyShare,
+  }));
   const top = (slot: ItemSlot) =>
-    rows.filter((r) => r.slot === slot).sort((a, b) => b.winRate - a.winRate).slice(0, perSlot);
+    rows.filter((r) => r.slot === slot).sort((a, b) => b.lift - a.lift).slice(0, perSlot);
   return { weapon: top("weapon"), vitality: top("vitality"), spirit: top("spirit") };
 }
 
@@ -159,7 +192,12 @@ export function buildItemRows(stats: ItemStat[], items: Item[], totals: GameTota
 export type MatchupHero = { heroId: number; name: string; shortName: string };
 /** Row hero's win rate vs column hero minus 50, in points; null on the diagonal; "n/a" below the sample minimum. */
 export type MatchupCell = number | null | "n/a";
-export type MatchupGrid = { heroes: MatchupHero[]; cells: MatchupCell[][] };
+/**
+ * `heroes` are the rows; columns are `cols` when given (two lineups), else the
+ * same heroes (Meta). `games[r][c]` is how many matches the pair played (0 when
+ * the API has none), for the hover.
+ */
+export type MatchupGrid = { heroes: MatchupHero[]; cols?: MatchupHero[]; cells: MatchupCell[][]; games: number[][] };
 
 /** "Lady Geist" → "Geist", for narrow column headers. */
 export function shortHeroName(name: string): string {
@@ -182,12 +220,22 @@ export function buildMatchupGrid(rows: HeroRow[], stats: MatchupStat[], size = 6
       return (pair.wins / pair.matches - 0.5) * 100;
     }),
   );
-  return { heroes, cells };
+  const games = heroes.map((row) => heroes.map((col) => pairs.get(`${row.heroId}:${col.heroId}`)?.matches ?? 0));
+  return { heroes, cells, games };
 }
 
 // ---- Rank distribution ----------------------------------------------------
 
-export type RankShare = { tier: number; name: string; short: string; share: number };
+export type RankShare = {
+  tier: number;
+  name: string;
+  short: string;
+  share: number;
+  /** Ranked players in this tier (latest ranked match in the window). */
+  players: number;
+  /** Share of ranked players in this tier or higher, 0–1. */
+  atOrAbove: number;
+};
 
 /** Share of ranked players per tier, Initiate (1) and up. Obscurus (0, unranked) is left out. */
 export function buildRankShares(population: RankPopulation[], ranks: Rank[]): { shares: RankShare[]; median: string | null } {
@@ -195,11 +243,14 @@ export function buildRankShares(population: RankPopulation[], ranks: Rank[]): { 
   const tiers = ranks.filter((r) => r.tier >= 1);
   const total = tiers.reduce((sum, r) => sum + (counts.get(r.tier) ?? 0), 0);
   if (total === 0) return { shares: [], median: null };
+  const players = (tier: number) => counts.get(tier) ?? 0;
   const shares = tiers.map((r) => ({
     tier: r.tier,
     name: r.name,
     short: r.name.slice(0, 3).toUpperCase(),
-    share: (counts.get(r.tier) ?? 0) / total,
+    share: players(r.tier) / total,
+    players: players(r.tier),
+    atOrAbove: tiers.filter((t) => t.tier >= r.tier).reduce((sum, t) => sum + players(t.tier), 0) / total,
   }));
   let cumulative = 0;
   const median = shares.find((s) => (cumulative += s.share) >= 0.5)?.name ?? null;

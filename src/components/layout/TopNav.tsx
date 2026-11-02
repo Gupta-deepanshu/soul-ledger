@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import Form from "next/form";
-import Link from "next/link";
 import { Search } from "lucide-react";
 import { SampleBadge } from "@/components/ui/SampleBadge";
 import { DoubleRule } from "@/components/ui/DoubleRule";
+import { IconButton } from "@/components/ui/buttons";
 import { Logo } from "./Logo";
 import { NavLinkList, NavLinks } from "./NavLinks";
 
@@ -39,13 +39,12 @@ export function TopNav({ sample }: { sample: boolean }) {
             />
           </Form>
           {sample && <SampleBadge className="hidden md:inline-block" />}
-          <Link
+          <IconButton
             href="/players"
             aria-label="Search players"
-            className="flex size-11 items-center justify-center border border-line-strong bg-surface text-fg hover:border-line-muted xl:hidden"
-          >
-            <Search size={18} strokeWidth={1.5} aria-hidden="true" />
-          </Link>
+            icon={<Search size={18} strokeWidth={1.5} />}
+            className="xl:hidden"
+          />
         </div>
       </div>
       <DoubleRule />

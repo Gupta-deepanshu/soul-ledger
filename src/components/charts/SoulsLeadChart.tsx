@@ -2,11 +2,15 @@
 
 import { useId, useRef, useState } from "react";
 import { motion, useInView } from "motion/react";
-import { cn } from "@/lib/utils";
 import { formatCompact, formatDuration } from "@/lib/format";
 import { KING, MOTHER, TEAMS } from "@/lib/deadlock/teams";
 import type { LeadPoint, MatchEvent } from "@/lib/deadlock/match";
 import { useEventHighlight } from "@/components/match/EventHighlight";
+import { ChartReadout, ChartTooltip, Muted, isPhoneViewport } from "./ChartTooltip";
+import { useViewBoxScale } from "./useViewBoxScale";
+
+/** On-screen size of every chart label, in CSS px, at any width. */
+const LABEL_PX = 11;
 
 // viewBox geometry (see the soul-ledger-charts skill).
 const W = 800;
@@ -50,6 +54,12 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
   const inView = useInView(ref, { once: true });
   const { active, setActive } = useEventHighlight();
   const [cursor, setCursor] = useState<number | null>(null);
+  // Phone: the snapshot the readout describes (the final one to start).
+  const [selected, setSelected] = useState(Math.max(0, lead.length - 1));
+  // Labels are sized in viewBox units, so convert 11 px on screen into units
+  // once the chart's width is known (the classes below are the pre-measure fallback).
+  const k = useViewBoxScale(ref, W);
+  const labelStyle = k == null ? undefined : { fontSize: LABEL_PX * k };
 
   const scale = niceScale(Math.max(...lead.map((p) => Math.abs(p.lead)), 1));
   const x = (t: number) => X0 + (t / Math.max(durationS, 1)) * (X1 - X0);
@@ -103,6 +113,16 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
   }
 
   const point = cursor == null ? null : lead[cursor];
+  const picked = lead[selected] ?? null;
+  const leadClass = (v: number) => (v === 0 ? "text-fg" : TEAMS[v > 0 ? KING : MOTHER].textClass);
+  /** How the lead moved since the snapshot before, e.g. "Hidden King gained 3.2k". */
+  const changeText = (i: number) => {
+    const before = lead[i - 1];
+    if (!before) return "first snapshot";
+    const diff = lead[i].lead - before.lead;
+    if (diff === 0) return "no change since the last snapshot";
+    return `${TEAMS[diff > 0 ? KING : MOTHER].shortName} gained ${formatCompact(Math.abs(diff))} since ${formatDuration(before.timeS)}`;
+  };
 
   return (
     <div
@@ -112,11 +132,15 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
       aria-label="Souls lead chart. Use the left and right arrow keys to step through the stats snapshots."
       onKeyDown={onKeyDown}
       onBlur={() => setCursor(null)}
-      onPointerMove={(e) => setCursor(nearest(e.clientX))}
+      onPointerMove={(e) => e.pointerType === "mouse" && setCursor(nearest(e.clientX))}
       onPointerLeave={() => setCursor(null)}
-      className="relative outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brass"
+      onClick={(e) => {
+        const i = isPhoneViewport() ? nearest(e.clientX) : null;
+        if (i != null) setSelected(i);
+      }}
+      className="relative outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-brass"
     >
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label={describe(lead)}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full overflow-visible" role="img" aria-label={describe(lead)}>
         <defs>
           <clipPath id={`${uid}-above`}>
             <rect x="0" y="0" width={W} height={ZERO} />
@@ -134,7 +158,7 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
         <line x1={X0} y1={ZERO} x2={X1} y2={ZERO} stroke="var(--tick)" strokeWidth="1" />
 
         {/* Y labels: outside the plot on tablet/desktop, inside it (larger) on phones. */}
-        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block">
+        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block" style={labelStyle}>
           {grid.map((v) => (
             <text key={v} x={X0 - 8} y={y(v) + 4} textAnchor="end">
               {label(v)}
@@ -144,7 +168,7 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
             0
           </text>
         </g>
-        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden">
+        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden" style={labelStyle}>
           {[scale, -scale].map((v) => (
             <text key={v} x={X0 + 6} y={y(v) - 8}>
               {label(v)}
@@ -220,18 +244,22 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
         </motion.g>
 
         {point && (
-          <line x1={x(point.timeS)} y1={14} x2={x(point.timeS)} y2={DIAMOND_Y} stroke="var(--brass)" strokeWidth="1" />
+          <line x1={x(point.timeS)} y1={14} x2={x(point.timeS)} y2={DIAMOND_Y} stroke="var(--brass)" strokeWidth="1" className="hidden md:block" />
+        )}
+        {/* Phone: ring on the snapshot in the readout. */}
+        {picked && (
+          <circle cx={x(picked.timeS)} cy={y(picked.lead)} r={16} fill="none" stroke="var(--brass)" strokeWidth="3" className="md:hidden" />
         )}
 
-        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block">
-          {axis(70).map((l) => (
+        <g fill="var(--faint)" className="hidden font-mono text-[11px] md:block" style={labelStyle}>
+          {axis(k == null ? 70 : 70 * k).map((l) => (
             <text key={`${l.x}-${l.text}`} x={l.x} y={300} textAnchor="middle">
               {l.text}
             </text>
           ))}
         </g>
-        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden">
-          {axis(150).map((l, i, all) => (
+        <g fill="var(--faint)" className="font-mono text-[22px] md:hidden" style={labelStyle}>
+          {axis(k == null ? 150 : 64 * k).map((l, i, all) => (
             <text key={`${l.x}-${l.text}`} x={l.x} y={308} textAnchor={i === 0 ? "start" : i === all.length - 1 ? "end" : "middle"}>
               {l.text.split(" · ")[0]}
             </text>
@@ -239,19 +267,23 @@ export function SoulsLeadChart({ lead, events, durationS }: Props) {
         </g>
       </svg>
 
-      {point && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute top-0 flex -translate-x-1/2 flex-col gap-0.5 border border-line-strong bg-ink px-2.5 py-1.5 font-mono text-[11px] whitespace-nowrap"
-          style={{ left: `clamp(60px, ${(x(point.timeS) / W) * 100}%, calc(100% - 60px))` }}
-        >
+      {point && cursor != null && (
+        <ChartTooltip x={(x(point.timeS) / W) * 100}>
           <span className="text-muted-foreground">{formatDuration(point.timeS)}</span>
-          <span className={cn(point.lead === 0 ? "text-fg" : TEAMS[point.lead > 0 ? KING : MOTHER].textClass)}>{leadText(point.lead)}</span>
-        </div>
+          <span className={leadClass(point.lead)}>{leadText(point.lead)}</span>
+          <Muted>{changeText(cursor)}</Muted>
+        </ChartTooltip>
       )}
       <p aria-live="polite" className="sr-only">
-        {point ? `${formatDuration(point.timeS)}: ${leadText(point.lead)}` : ""}
+        {point && cursor != null ? `${formatDuration(point.timeS)}: ${leadText(point.lead)}, ${changeText(cursor)}` : ""}
       </p>
+      {picked && (
+        <ChartReadout className="mt-2.5">
+          <span className="text-muted-foreground">{formatDuration(picked.timeS)}</span>
+          <span className={leadClass(picked.lead)}>{leadText(picked.lead)}</span>
+          <Muted>{changeText(selected)}</Muted>
+        </ChartReadout>
+      )}
     </div>
   );
 }

@@ -6,9 +6,10 @@ import { connection } from "next/server";
 import { LiveMatchSummary } from "@/components/live/LiveMatchSummary";
 import { MatchReportView } from "@/components/match/MatchReportView";
 import { SectionError } from "@/components/ui/SectionError";
+import { LedgerLoader, LOADER_MESSAGES } from "@/components/ui/LedgerLoader";
 import { getHeroes, getItems, getMatchReport, getPlayerNames, getRanks } from "@/lib/deadlock/api";
 import { isSampleData, type ApiFailure } from "@/lib/deadlock/client";
-import { getLiveBoard } from "@/lib/deadlock/live";
+import { getActiveMatch, getLiveBoard, getLiveDraft, getLiveLineups } from "@/lib/deadlock/live";
 import { buildMatchView } from "@/lib/deadlock/match";
 import { settle } from "@/lib/deadlock/settle";
 import { formatInt } from "@/lib/format";
@@ -37,7 +38,18 @@ async function MatchContent({ params }: { params: PageProps<"/matches/[id]">["pa
   const board = await settle(getLiveBoard());
   const live = board.ok ? board.data.matches.find((m) => m.id === matchId) : undefined;
   if (board.ok && live) {
-    return <LiveMatchSummary matchId={matchId} initial={{ fetchedAt: board.data.fetchedAt, match: live, heroes: board.data.heroes }} />;
+    // Player rows and the draft stream in after the souls card (not awaited here).
+    const raw = getActiveMatch(matchId);
+    const lineups = settle(raw.then((m) => (m ? getLiveLineups(m) : Promise.reject(new Error(`Match ${matchId} left the live list`)))));
+    const draft = settle(getLiveDraft(live.heroes));
+    return (
+      <LiveMatchSummary
+        matchId={matchId}
+        initial={{ fetchedAt: board.data.fetchedAt, dataAt: board.data.dataAt, match: live, heroes: board.data.heroes }}
+        lineups={lineups}
+        draft={draft}
+      />
+    );
   }
 
   // 2. Finished: the full report (metadata cached 7 days).
@@ -91,12 +103,15 @@ function MatchError({ id, failure }: { id: number; failure: ApiFailure | null })
 function MatchSkeleton() {
   return (
     <div aria-busy="true" className="flex flex-col gap-5 pt-6">
-      <span className="sr-only">Loading match…</span>
-      <div className="h-40 border-b border-line" />
-      <div className="h-[300px] border border-line bg-surface" />
+      {/* Hero: the ledger loader where the title will be. */}
+      <div className="flex h-40 flex-col justify-end gap-3 border-b border-line pb-6">
+        <span className="ink-wash block h-3 w-44" />
+        <LedgerLoader messages={LOADER_MESSAGES.match} size="hero" />
+      </div>
+      <div className="ink-wash h-[300px] border border-line" />
       <div className="grid gap-5 xl:grid-cols-[1fr_2fr]">
-        <div className="h-[420px] border border-line bg-surface" />
-        <div className="h-[420px] border border-line bg-surface" />
+        <div className="ink-wash h-[420px] border border-line" />
+        <div className="ink-wash h-[420px] border border-line" />
       </div>
     </div>
   );
