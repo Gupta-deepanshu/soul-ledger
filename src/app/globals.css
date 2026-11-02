@@ -132,6 +132,8 @@
   }
   html {
     @apply font-sans;
+    /* Dark-only site: native controls and scrollbars render dark, and browsers don't auto-darken it. */
+    color-scheme: dark;
   }
   body {
     @apply bg-ink text-fg;

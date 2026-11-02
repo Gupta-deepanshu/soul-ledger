@@ -16,6 +16,8 @@ Dark only. Define these in `src/app/globals.css` (in `:root` and `.dark`, with
 `className="dark"` on `<html>`) and expose them in Tailwind's `@theme`
 (`--color-ink`, `--color-surface`, …) so classes like `bg-surface` work.
 
+Dark-only. The site declares color-scheme dark and darkreader-lock so dark-mode extensions don't recolour it.
+
 | Token | Hex | Use |
 |---|---|---|
 | `ink` | `#0F0D0B` | Page background |
