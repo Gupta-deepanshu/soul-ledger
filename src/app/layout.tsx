@@ -31,10 +31,14 @@ export const metadata: Metadata = {
   title: { default: "Soul Ledger", template: "%s · Soul Ledger" },
   description:
     "Deadlock hero and item meta, live matches, match reports and player profiles. A fan project built on deadlock-api.com.",
+  // The site is dark-only: tells Dark Reader (and similar extensions) not to recolour it.
+  // Dark Reader only checks that the tag exists; the content is ignored.
+  other: { "darkreader-lock": "true" },
 };
 
 export const viewport: Viewport = {
   themeColor: "#0F0D0B",
+  // Renders <meta name="color-scheme" content="dark">: browsers' own auto-dark modes leave the site alone.
   colorScheme: "dark",
   viewportFit: "cover",
 };

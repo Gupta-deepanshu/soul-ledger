@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useRestoreKey } from "./useRestoreKey";
 
 /** Fill share for a 0–1 win rate on the 40–60% scale. */
 export function winRateFill(winRate: number) {
@@ -25,9 +26,13 @@ export function WinRateBar({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
+  // Re-creates the fill when the page comes back after Next.js kept it hidden, so a fill
+  // that was cut off mid-grow doesn't stay empty.
+  const restoreKey = useRestoreKey();
   return (
     <div ref={ref} aria-hidden="true" className={cn("relative h-[5px] flex-1 bg-rule md:h-1.5", className)}>
       <motion.div
+        key={restoreKey}
         className={cn("h-full w-full origin-left", fillClass)}
         initial={{ scaleX: 0 }}
         animate={{ scaleX: inView ? winRateFill(winRate) : 0 }}
