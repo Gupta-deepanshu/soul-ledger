@@ -33,11 +33,12 @@ export default function MetaPage({ searchParams }: PageProps<"/">) {
           <Suspense fallback={<CardSkeleton numeral="I." title="Hero standings" rows={10} />}>
             <HeroStandingsSection minTier={minTier} index={0} />
           </Suspense>
-          <div className="grid gap-4 md:grid-cols-2 md:gap-5 xl:flex xl:flex-col">
+          {/* Desktop: natural heights; pinned while scrolling a long (expanded) Hero standings list when the window is tall enough to show the whole column. */}
+          <div className="grid gap-4 md:grid-cols-2 md:gap-5 xl:flex xl:flex-col xl:self-start xl:[@media(min-height:900px)]:sticky xl:[@media(min-height:900px)]:top-6">
             <Suspense fallback={<CardSkeleton numeral="II." title="Movers" rows={3} />}>
               <MoversSection minTier={minTier} index={1} />
             </Suspense>
-            <Suspense fallback={<CardSkeleton numeral="III." title="Where players rank" rows={4} className="xl:flex-1" />}>
+            <Suspense fallback={<CardSkeleton numeral="III." title="Where players rank" rows={4} />}>
               <RankDistributionSection minTier={minTier} index={2} />
             </Suspense>
           </div>
