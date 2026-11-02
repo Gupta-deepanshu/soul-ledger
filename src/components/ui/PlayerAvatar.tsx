@@ -16,6 +16,8 @@ type PlayerAvatarProps = {
   className?: string;
 };
 
+// Steam avatars are ~15 KB JPEGs, one per player (unbounded), so optimising them would use up
+// Vercel's 5,000 free image transformations: they are served as is (`unoptimized`).
 /** Square Steam avatar; brass serif initials if there is none or it fails to load. */
 export function PlayerAvatar({ avatarUrl, initials, alt = "", sizes, className }: PlayerAvatarProps) {
   const [failed, setFailed] = useState(false);
@@ -28,7 +30,7 @@ export function PlayerAvatar({ avatarUrl, initials, alt = "", sizes, className }
       )}
     >
       {showImage ? (
-        <Image src={avatarUrl} alt={alt} fill sizes={sizes} className="object-cover" onError={() => setFailed(true)} />
+        <Image src={avatarUrl} alt={alt} fill sizes={sizes} unoptimized className="object-cover" onError={() => setFailed(true)} />
       ) : (
         <span aria-hidden="true">{initials}</span>
       )}

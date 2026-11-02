@@ -17,6 +17,8 @@ export function RankBadge({ rank, className }: RankBadgeProps) {
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-[13px]", className)}>
       {rank.imageUrl && !failed ? (
+        // Kept optimised on purpose: the API's rank files are 15–200 KB (drawn for large sizes) and
+        // shown at 20 px, while there are only ~80 of them, so they cost few transformations.
         <Image src={rank.imageUrl} alt="" width={20} height={20} className="size-5" onError={() => setFailed(true)} />
       ) : (
         <svg aria-hidden="true" viewBox="0 0 12 12" className="size-3">
