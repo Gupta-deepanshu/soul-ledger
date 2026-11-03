@@ -91,6 +91,8 @@ src/
 - `npm run dev` — local server at http://localhost:3000
 - `npm run lint` — lint
 - `npm run build` — production build (must pass before a page is done)
+- `npm test` — Jest: `*.test.ts` logic tests run in Node against the saved fixtures;
+  `*.test.tsx` component tests run in jsdom with Testing Library (setup in `jest.setup.ts`)
 
 The developer uses Windows PowerShell: give PowerShell syntax for any shell
 commands you ask them to run (comma-separated paths, `\` separators, no `mkdir -p`).
