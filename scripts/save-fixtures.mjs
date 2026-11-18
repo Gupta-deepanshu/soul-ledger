@@ -170,8 +170,11 @@ await save("heroes", await get("/v1/assets/heroes?only_active=true"));
 await save("items", await get("/v1/assets/items"));
 await save("ranks", await get("/v1/assets/ranks"));
 
-const patches = await get("/v1/patches");
-await save("patches", patches);
+// Same filter as isGameUpdate in src/lib/deadlock/mappers.ts.
+const isGameUpdate = (p) => p.source === "forum" || (p.source === "steam" && /\b(update|season)\b/i.test(p.title));
+const allPatches = await get("/v2/patches");
+await save("patches", allPatches);
+const patches = allPatches.filter(isGameUpdate);
 
 // Patch windows. Feed entries published within 3 days of each other count as
 // one patch (same rule as mapPatchWindows in src/lib/deadlock/mappers.ts).

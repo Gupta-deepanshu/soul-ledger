@@ -136,7 +136,7 @@ const FIXTURES: [RegExp, (m: RegExpExecArray) => string][] = [
   [/^\/v1\/assets\/heroes$/, () => "heroes"],
   [/^\/v1\/assets\/items$/, () => "items"],
   [/^\/v1\/assets\/ranks$/, () => "ranks"],
-  [/^\/v1\/patches$/, () => "patches"],
+  [/^\/v2\/patches$/, () => "patches"],
   [/^\/v1\/analytics\/hero-stats$/, () => "hero-stats"],
   [/^\/v1\/analytics\/game-stats$/, () => "game-stats"],
   [/^\/v1\/analytics\/item-stats$/, () => "item-stats"],

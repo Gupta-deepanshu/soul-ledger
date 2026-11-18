@@ -53,7 +53,10 @@ uses the 30 s cache, so many visitors still cost one API call per 30 s.
   Check exact field names in the spec. Use for item names, ItemChip colour and tier.
 - `GET /v1/assets/ranks` → 12 tiers: `tier`, `name`, `color`, `images.large(_webp)`,
   `images.small_subrank1…6(_webp)`. Badge image: `/v1/assets/ranks/{tier}/{subrank}/image`.
-- `GET /v1/patches` → patch dates and notes (for "current patch" and the movers comparison).
+- `GET /v2/patches` → patch dates and notes (for "current patch" and the movers comparison).
+  Forum changelog + Steam news in one feed (`source`: `forum` | `steam`). Keep forum entries
+  and Steam titles with "Update" or "Season"; the rest is news. `/v1/patches` is deprecated
+  and forum-only, so it misses patches announced only on Steam.
 
 ### Meta page (`/`)
 - **Hero standings:** `GET /v1/analytics/hero-stats` with a time window

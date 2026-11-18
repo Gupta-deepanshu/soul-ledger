@@ -61,7 +61,10 @@ export const rankSchema = z.object({
 });
 export const ranksSchema = z.array(rankSchema);
 
+// /v2/patches: the forum changelog and Steam news in one feed. Steam entries
+// include news posts that aren't patches; mapPatches filters those out.
 export const patchSchema = z.object({
+  source: z.string(),
   title: z.string(),
   pub_date: z.string(),
   link: z.string(),
