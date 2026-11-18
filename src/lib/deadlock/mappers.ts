@@ -101,9 +101,20 @@ export function decodeBadge(badge: number): Badge {
   return { badge, tier: Math.floor(badge / 10), subrank: badge % 10 };
 }
 
+/**
+ * Is this feed entry a game update? Every forum changelog post is. Steam also
+ * posts news ("Paint the Town", hero teasers…), so from Steam only titles
+ * naming an update or a season count ("Minor Update - 11-04-2026",
+ * "Halloween 2026 + Gameplay Update", "Ranked - Beta Season 2").
+ */
+export function isGameUpdate(p: Pick<RawPatch, "source" | "title">): boolean {
+  return p.source === "forum" || (p.source === "steam" && /\b(update|season)\b/i.test(p.title));
+}
+
 export function mapPatches(raw: RawPatch[]): Patch[] {
   return raw
-    .map((p) => ({ title: p.title, publishedAt: Math.floor(Date.parse(p.pub_date) / 1000), url: p.link }))
+    .filter(isGameUpdate)
+    .map((p) => ({ title: p.title.trim(), publishedAt: Math.floor(Date.parse(p.pub_date) / 1000), url: p.link }))
     .filter((p) => Number.isFinite(p.publishedAt))
     .sort((a, b) => b.publishedAt - a.publishedAt);
 }

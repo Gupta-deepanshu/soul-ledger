@@ -95,7 +95,21 @@ describe("patches", () => {
   });
 
   it("drops entries with unparseable dates", () => {
-    expect(mapPatches([{ title: "x", pub_date: "not a date", link: "https://example.com" }])).toEqual([]);
+    expect(mapPatches([{ source: "forum", title: "x", pub_date: "not a date", link: "https://example.com" }])).toEqual([]);
+  });
+
+  it("keeps forum posts and Steam updates, drops Steam news", () => {
+    const entry = (source: string, title: string) => ({ source, title, pub_date: "2026-11-05T00:00:00Z", link: "" });
+    const kept = mapPatches([
+      entry("forum", "09-29-2026"),
+      entry("steam", " Minor Update - 11-04-2026"),
+      entry("steam", "Halloween 2026 + Gameplay Update"),
+      entry("steam", "Ranked - Beta Season 2"),
+      entry("steam", "Paint the Town"),
+      entry("steam", "Fairfax Industries Employee Spotlight"),
+      entry("other", "Some Update"),
+    ]).map((p) => p.title);
+    expect(kept).toEqual(["09-29-2026", "Minor Update - 11-04-2026", "Halloween 2026 + Gameplay Update", "Ranked - Beta Season 2"]);
   });
 
   it("merges entries less than 3 days apart into one patch window", () => {
@@ -111,10 +125,11 @@ describe("patches", () => {
     expect(mapPatchWindows([])).toBeNull();
   });
 
-  it("reads the saved feed (Oct 15 patch, previous from Sep 16)", () => {
+  it("reads the saved feed (Nov 5 ranked season, previous from the Oct 30 update)", () => {
     const windows = mapPatchWindows(patches);
-    expect(windows?.current.since).toBe(Date.parse("2026-10-15T03:12:00Z") / 1000);
-    expect(windows?.previous?.since).toBe(Date.parse("2026-09-16T22:41:46Z") / 1000);
+    expect(windows?.patch.title).toBe("Ranked - Beta Season 2");
+    expect(windows?.current.since).toBe(Date.parse("2026-11-05T19:58:14Z") / 1000);
+    expect(windows?.previous?.since).toBe(Date.parse("2026-10-30T20:51:49Z") / 1000);
   });
 });
 

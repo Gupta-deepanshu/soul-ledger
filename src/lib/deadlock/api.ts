@@ -94,7 +94,7 @@ export async function getPatches(): Promise<Patch[]> {
   "use cache";
   cacheLife("assets");
   cacheTag("assets", "patches");
-  return mapPatches(await deadlockFetch("/v1/patches", patchesSchema));
+  return mapPatches(await deadlockFetch("/v2/patches", patchesSchema));
 }
 
 export async function getPatchWindows(): Promise<PatchWindows | null> {
